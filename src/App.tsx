@@ -295,289 +295,287 @@ function App() {
   }
 
   return (
-    <div className="relative min-h-screen bg-sadhana-dark text-slate-100">
+    <div className="relative min-h-screen bg-sadhana-dark text-slate-100 flex flex-col">
       
-      {/* Blurred application content */}
-      <div className={`max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-8 animate-fade-in transition-all duration-300 ${
+      {/* Sleek Top Navigation Bar */}
+      <header className="border-b border-white/[0.04] bg-[#161514] px-4 md:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm w-full shrink-0">
+        
+        {/* Left Side: Brand Logo & greeting name */}
+        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-sadhana-gold/10 rounded-lg border border-sadhana-gold/20">
+              <Sparkles className="w-4 h-4 text-sadhana-gold-accent fill-sadhana-gold-accent/15" />
+            </div>
+            <span className="text-xs font-sans font-bold tracking-[0.25em] text-white uppercase">Sadhana Mandala</span>
+          </div>
+          
+          <div className="hidden sm:block h-4 w-[1px] bg-white/10" />
+          
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 font-sans">
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Hi,</span>
+            <span className="font-semibold text-slate-200 font-serif">{store.username || 'Sadhaka'}</span>
+          </div>
+        </div>
+
+        {/* Center: Tabs selector */}
+        <nav className="flex p-0.5 rounded-xl bg-[#1e1c1a]/60 border border-white/[0.04] shadow-inner max-w-sm w-full sm:w-auto justify-between items-center gap-0.5">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`
+              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              ${activeTab === 'dashboard'
+                ? 'bg-sadhana-gold text-black shadow'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
+              }
+            `}
+          >
+            <CalendarDays className="w-3.5 h-3.5" />
+            Dashboard
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('vows')}
+            className={`
+              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              ${activeTab === 'vows'
+                ? 'bg-sadhana-gold text-black shadow'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
+              }
+            `}
+          >
+            <Award className="w-3.5 h-3.5" />
+            Sankalps
+          </button>
+          
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`
+              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              ${activeTab === 'settings'
+                ? 'bg-sadhana-gold text-black shadow'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
+              }
+            `}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            Settings
+          </button>
+        </nav>
+
+        {/* Right Side: Account status/Sync actions */}
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end text-[10px] font-sans text-slate-400 shrink-0">
+          {isCloudSyncing ? (
+            <div className="flex items-center gap-1.5 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
+              <Loader2 className="w-3 h-3 animate-spin text-sadhana-gold-accent" />
+              <span>Syncing...</span>
+            </div>
+          ) : currentUser ? (
+            <div className="flex items-center gap-2 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
+              <span className="w-1.5 h-1.5 rounded-full bg-sadhana-emerald" />
+              <span className="font-mono max-w-[120px] truncate">{currentUser.email}</span>
+              <span className="text-slate-600">|</span>
+              <button 
+                onClick={handleSignOut}
+                className="text-sadhana-gold-accent hover:text-white transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+              <span>Guest</span>
+              <span className="text-slate-600">|</span>
+              <button 
+                onClick={() => setShowAuthPage(true)}
+                className="text-sadhana-gold-accent hover:text-white font-semibold transition-colors flex items-center gap-0.5"
+              >
+                <Cloud className="w-3 h-3" />
+                Sign In
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <div className={`flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 py-6 space-y-6 animate-fade-in transition-all duration-300 flex flex-col ${
         showGuestGate ? 'blur-[6px] pointer-events-none select-none' : ''
       }`}>
         
-        {/* Editorial Header */}
-        <header className="text-center space-y-3 relative py-4">
-          
-          {/* Profile Sync Pill */}
-          <div className="flex justify-center flex-wrap gap-2">
-            {isCloudSyncing ? (
-              <div className="text-[9px] text-slate-400 font-sans flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/[0.01] border border-white/[0.03]">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-sadhana-gold-accent" />
-                <span>Syncing with Cloud...</span>
-              </div>
-            ) : currentUser ? (
-              <div className="text-[9px] text-slate-400 font-sans flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/[0.01] border border-white/[0.03]">
-                <span className="w-1.5 h-1.5 rounded-full bg-sadhana-emerald" />
-                <span>Synced as {currentUser.email}</span>
-                <span className="text-slate-600">•</span>
-                <button 
-                  onClick={handleSignOut}
-                  className="text-sadhana-gold-accent hover:text-white transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="text-[9px] text-slate-400 font-sans flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/[0.01] border border-white/[0.03]">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-                <span>Guest Mode (Local Only)</span>
-                <span className="text-slate-600">•</span>
-                <button 
-                  onClick={() => setShowAuthPage(true)}
-                  className="text-sadhana-gold-accent hover:text-white font-semibold transition-colors flex items-center gap-0.5"
-                >
-                  <Cloud className="w-3 h-3" />
-                  Sign In to Sync
-                </button>
-              </div>
-            )}
+        {/* Subtle dynamic tab banner */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/[0.03] pb-4">
+          <div>
+            <h2 className="text-xs font-sans font-bold text-slate-400 uppercase tracking-widest">
+              {activeTab === 'dashboard' && 'Dashboard Overview'}
+              {activeTab === 'vows' && 'Vows & Resolutions'}
+              {activeTab === 'settings' && 'Practice Settings'}
+            </h2>
+            <p className="text-[10px] text-slate-500 font-serif italic mt-0.5">"{greeting}"</p>
           </div>
-
-          <div className="flex items-center justify-center gap-2.5 text-sadhana-gold-accent pt-2">
-            <span className="text-xs uppercase tracking-[0.2em] font-sans font-bold">Hi, {store.username || 'Sadhaka'}</span>
-          </div>
-
-          <h1 className="text-3xl md:text-4xl font-serif font-semibold text-white tracking-widest leading-none">
-            SADHANA MANDALA
-          </h1>
-
-          {/* Divider */}
-          <div className="flex items-center justify-center gap-3 py-1">
-            <div className="h-[1px] w-12 md:w-24 bg-gradient-to-r from-transparent to-sadhana-gold/30" />
-            <div className="w-2 h-2 rounded-full border border-sadhana-gold/40 flex items-center justify-center bg-sadhana-dark">
-              <Sparkles className="w-1 h-1 text-sadhana-gold fill-sadhana-gold/20" />
-            </div>
-            <div className="h-[1px] w-12 md:w-24 bg-gradient-to-l from-transparent to-sadhana-gold/30" />
-          </div>
-
-          <p className="text-xs md:text-sm text-slate-400 max-w-md mx-auto italic font-medium font-serif leading-relaxed">
-            "{greeting}"
-          </p>
-        </header>
-
-        {/* Tabs Navigation (Flat Linen tabs) */}
-        <div className="flex justify-center">
-          <nav className="glass-panel flex p-1 rounded-xl border border-white/[0.04] shadow-md max-w-md w-full justify-between items-center gap-1">
-            {/* Tab: Dashboard */}
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`
-                flex flex-1 items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200
-                ${activeTab === 'dashboard'
-                  ? 'bg-sadhana-gold text-black shadow'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'
-                }
-              `}
-            >
-              <CalendarDays className="w-4 h-4" />
-              Dashboard
-            </button>
-
-            {/* Tab: Sankalps */}
-            <button
-              onClick={() => setActiveTab('vows')}
-              className={`
-                flex flex-1 items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200
-                ${activeTab === 'vows'
-                  ? 'bg-sadhana-gold text-black shadow'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'
-                }
-              `}
-            >
-              <Award className="w-4 h-4" />
-              Sankalps
-            </button>
-
-            {/* Tab: Settings */}
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`
-                flex flex-1 items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all duration-200
-                ${activeTab === 'settings'
-                  ? 'bg-sadhana-gold text-black shadow'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'
-                }
-              `}
-            >
-              <Settings className="w-4 h-4" />
-              Settings
-            </button>
-          </nav>
         </div>
 
-        {/* Render Active Tab */}
-        <main className="transition-all duration-300">
-          
-          {/* Tab 1: Dashboard */}
-          {activeTab === 'dashboard' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fade-in">
-              {/* Calendar Grid (2 columns on large screen) */}
-              <div className="lg:col-span-2 h-full">
-                <Calendar 
-                  logs={store.logs}
-                  sadhanas={displaySadhanas}
-                  selectedDate={selectedDate}
-                  onSelectDate={handleSelectDate}
-                />
-              </div>
-
-              {/* Statistics (1 column on large screen) */}
-              <div className="h-full">
-                <Stats 
-                  stats={stats}
-                  sadhanas={displaySadhanas}
-                  logs={store.logs}
-                  sankalps={store.sankalps}
-                />
-              </div>
+        {/* Tab 1: Dashboard */}
+        {activeTab === 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fade-in">
+            {/* Calendar Grid (2 columns on large screen) */}
+            <div className="lg:col-span-2 h-full">
+              <Calendar 
+                logs={store.logs}
+                sadhanas={displaySadhanas}
+                selectedDate={selectedDate}
+                onSelectDate={handleSelectDate}
+              />
             </div>
-          )}
 
-          {/* Tab 2: Vows Resolutions */}
-          {activeTab === 'vows' && (
-            <div className="animate-fade-in">
-              <SankalpManager
-                sankalps={store.sankalps}
+            {/* Statistics (1 column on large screen) */}
+            <div className="h-full">
+              <Stats 
+                stats={stats}
                 sadhanas={displaySadhanas}
                 logs={store.logs}
-                onAdd={handleAddSankalp}
-                onUpdateStatus={handleUpdateSankalpStatus}
-                onDelete={handleDeleteSankalp}
+                sankalps={store.sankalps}
               />
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Tab 3: Dynamic Sadhanas Settings */}
-          {activeTab === 'settings' && (
-            <div className="animate-fade-in space-y-6">
-              {/* Premium Profile & Account Settings Card */}
-              <div className="glass-panel rounded-2xl p-6 border border-white/[0.06] shadow-xl space-y-6">
-                <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+        {/* Tab 2: Vows Resolutions */}
+        {activeTab === 'vows' && (
+          <div className="animate-fade-in">
+            <SankalpManager
+              sankalps={store.sankalps}
+              sadhanas={displaySadhanas}
+              logs={store.logs}
+              onAdd={handleAddSankalp}
+              onUpdateStatus={handleUpdateSankalpStatus}
+              onDelete={handleDeleteSankalp}
+            />
+          </div>
+        )}
+
+        {/* Tab 3: Dynamic Sadhanas Settings */}
+        {activeTab === 'settings' && (
+          <div className="animate-fade-in space-y-6">
+            {/* Premium Profile & Account Settings Card */}
+            <div className="glass-panel rounded-2xl p-6 border border-white/[0.06] shadow-xl space-y-6">
+              <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+                
+                {/* Profile Detail Block */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left w-full sm:w-auto">
+                  {/* Avatar Initials Circle */}
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sadhana-gold/20 via-purple-500/10 to-indigo-500/10 border border-sadhana-gold/30 flex items-center justify-center font-serif text-2xl font-bold text-sadhana-gold-accent shadow-inner shrink-0">
+                    {(store.username || 'S').charAt(0).toUpperCase()}
+                  </div>
                   
-                  {/* Profile Detail Block */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left w-full sm:w-auto">
-                    {/* Avatar Initials Circle */}
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sadhana-gold/20 via-purple-500/10 to-indigo-500/10 border border-sadhana-gold/30 flex items-center justify-center font-serif text-2xl font-bold text-sadhana-gold-accent shadow-inner shrink-0">
-                      {(store.username || 'S').charAt(0).toUpperCase()}
+                  {/* Name and Synced indicator */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 justify-center sm:justify-start">
+                      <h3 className="font-serif text-white font-bold text-lg tracking-wide">
+                        {store.username || 'Sadhaka'}
+                      </h3>
+                      {currentUser ? (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-sadhana-emerald/10 text-sadhana-emerald border border-sadhana-emerald/20 uppercase tracking-wide font-sans">
+                          Synced
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-800 text-slate-400 border border-white/5 uppercase tracking-wide font-sans">
+                          Guest
+                        </span>
+                      )}
                     </div>
                     
-                    {/* Name and Synced indicator */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 justify-center sm:justify-start">
-                        <h3 className="font-serif text-white font-bold text-lg tracking-wide">
-                          {store.username || 'Sadhaka'}
-                        </h3>
-                        {currentUser ? (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-sadhana-emerald/10 text-sadhana-emerald border border-sadhana-emerald/20 uppercase tracking-wide font-sans">
-                            Synced
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-800 text-slate-400 border border-white/5 uppercase tracking-wide font-sans">
-                            Guest
-                          </span>
-                        )}
-                      </div>
-                      
+                    {currentUser ? (
+                      <p className="text-xs text-slate-400 font-mono">{currentUser.email}</p>
+                    ) : (
+                      <p className="text-xs text-slate-500 font-sans italic">Data stored locally on this device</p>
+                    )}
+                    
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-400 pt-1">
                       {currentUser ? (
-                        <p className="text-xs text-slate-400 font-mono">{currentUser.email}</p>
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-sadhana-emerald animate-pulse" />
+                          <span>Connected to cloud backup</span>
+                        </>
                       ) : (
-                        <p className="text-xs text-slate-500 font-sans italic">Data stored locally on this device</p>
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          <span>Offline storage active</span>
+                        </>
                       )}
-                      
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 pt-1">
-                        {currentUser ? (
-                          <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-sadhana-emerald animate-pulse" />
-                            <span>Connected to cloud backup</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                            <span>Offline storage active</span>
-                          </>
-                        )}
-                      </div>
                     </div>
                   </div>
-
-                  {/* Account Actions */}
-                  <div className="flex flex-col gap-2 w-full md:w-auto sm:items-end justify-center">
-                    {currentUser ? (
-                      <button
-                        onClick={handleSignOut}
-                        className="px-5 py-2.5 text-xs font-semibold text-rose-400 hover:text-white bg-rose-950/15 hover:bg-rose-600 border border-rose-900/30 hover:border-transparent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        Sign Out Account
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setShowAuthPage(true)}
-                        className="px-5 py-2.5 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold-accent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow-lg shadow-sadhana-gold/10"
-                      >
-                        <Cloud className="w-3.5 h-3.5" />
-                        Sync with Cloud
-                      </button>
-                    )}
-                  </div>
                 </div>
 
-                {/* Editable Name fields block */}
-                <div className="pt-5 border-t border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-semibold text-slate-300 font-sans">Edit Display Name</h4>
-                    <p className="text-[10px] text-slate-500 font-sans">Modify your name displayed across greetings and stats.</p>
-                  </div>
-                  <div className="flex gap-2 w-full sm:w-auto items-center">
-                    <input 
-                      type="text" 
-                      value={tempUsernameEdit} 
-                      onChange={e => setTempUsernameEdit(e.target.value)}
-                      className="flex-1 sm:w-60 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-sadhana-gold-accent font-serif"
-                    />
-                    <button 
-                      onClick={handleSaveUsernameEdit}
-                      className="px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold-accent rounded-xl transition-colors font-sans shrink-0"
+                {/* Account Actions */}
+                <div className="flex flex-col gap-2 w-full md:w-auto sm:items-end justify-center">
+                  {currentUser ? (
+                    <button
+                      onClick={handleSignOut}
+                      className="px-5 py-2.5 text-xs font-semibold text-rose-400 hover:text-white bg-rose-950/15 hover:bg-rose-600 border border-rose-900/30 hover:border-transparent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow"
                     >
-                      Save Changes
+                      <LogOut className="w-3.5 h-3.5" />
+                      Sign Out Account
                     </button>
-                  </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowAuthPage(true)}
+                      className="px-5 py-2.5 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold-accent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow-lg shadow-sadhana-gold/10"
+                    >
+                      <Cloud className="w-3.5 h-3.5" />
+                      Sync with Cloud
+                    </button>
+                  )}
                 </div>
-
               </div>
 
-              <SadhanaManager
-                sadhanas={displaySadhanas}
-                onAdd={handleAddSadhana}
-                onUpdate={handleUpdateSadhana}
-                onDelete={handleDeleteSadhana}
-                isReferencedInSankalp={isReferencedInSankalp}
-              />
+              {/* Editable Name fields block */}
+              <div className="pt-5 border-t border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-semibold text-slate-300 font-sans">Edit Display Name</h4>
+                  <p className="text-[10px] text-slate-500 font-sans">Modify your name displayed across greetings and stats.</p>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto items-center">
+                  <input 
+                    type="text" 
+                    value={tempUsernameEdit} 
+                    onChange={e => setTempUsernameEdit(e.target.value)}
+                    className="flex-1 sm:w-60 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-sadhana-gold-accent font-serif"
+                  />
+                  <button 
+                    onClick={handleSaveUsernameEdit}
+                    className="px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold-accent rounded-xl transition-colors font-sans shrink-0"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+
             </div>
-          )}
 
-        </main>
-
-        {/* Daily Editor Modal */}
-        <SadhanaModal 
-          date={selectedDate}
-          sadhanas={displaySadhanas}
-          sankalps={store.sankalps}
-          log={selectedDayLog}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSaveLog}
-          onDelete={handleDeleteLog}
-        />
+            <SadhanaManager
+              sadhanas={displaySadhanas}
+              onAdd={handleAddSadhana}
+              onUpdate={handleUpdateSadhana}
+              onDelete={handleDeleteSadhana}
+              isReferencedInSankalp={isReferencedInSankalp}
+            />
+          </div>
+        )}
 
       </div>
+
+      {/* Daily Editor Modal */}
+      <SadhanaModal 
+        date={selectedDate}
+        sadhanas={displaySadhanas}
+        sankalps={store.sankalps}
+        log={selectedDayLog}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveLog}
+        onDelete={handleDeleteLog}
+      />
 
       {/* Non-blurred sign-in prompt modal outside the blurred content */}
       {showGuestGate && (
