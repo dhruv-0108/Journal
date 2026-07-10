@@ -122,7 +122,15 @@ function App() {
 
   // Sign out handler
   const handleSignOut = async () => {
-    if (confirm('Are you sure you want to sign out? Your data is securely saved in the cloud and will also remain on this device.')) {
+    if (confirm('Are you sure you want to sign out? Your data is securely saved in the cloud and will be cleared from this device for privacy.')) {
+      // Clean up local storage and state before auth state change
+      localStorage.removeItem('sadhana_journal_store_v2');
+      setStore({
+        username: '',
+        sadhanas: [],
+        sankalps: [],
+        logs: {}
+      });
       await signOut(auth);
     }
   };
