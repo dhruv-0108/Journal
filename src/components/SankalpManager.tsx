@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, X, Calendar, Sparkles, Trash2 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, X, Calendar, Sparkles, Trash2, Calculator, Clock, Target } from 'lucide-react';
 import type { Sankalp, SadhanaConfig, SadhanaLogs } from '../types';
 import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount } from '../sadhanaUtils';
 
@@ -12,6 +12,10 @@ interface SankalpManagerProps {
   onDelete: (id: string) => void;
 }
 
+// Planning mode: user knows daily capacity → calculates days needed
+// OR user knows duration → calculates daily target needed
+type PlanningMode = 'know-daily' | 'know-duration';
+
 export const SankalpManager: React.FC<SankalpManagerProps> = ({
   sankalps,
   sadhanas,
@@ -22,24 +26,70 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Form states
+  // ── Core form fields ──────────────────────────────────────────────────────
   const [title, setTitle] = useState('');
   const [sadhanaId, setSadhanaId] = useState(sadhanas[0]?.id || '');
-  const [targetCount, setTargetCount] = useState(1);    // in Malas for mala-type, in reps for reps-type
+  const [startDate, setStartDate] = useState(formatDateString(new Date()));
+
+  // ── Planning mode ─────────────────────────────────────────────────────────
+  const [planningMode, setPlanningMode] = useState<PlanningMode>('know-daily');
+
+  // ── Mode A: "I know my daily target" fields ───────────────────────────────
+  // dailyTargetStr is kept as a string so the user can freely type (no forced min clamp)
+  const [dailyTargetStr, setDailyTargetStr] = useState('1');
   const [durationPreset, setDurationPreset] = useState<'11' | '21' | '41' | '108' | 'custom'>('41');
   const [customDuration, setCustomDuration] = useState(40);
-  const [startDate, setStartDate] = useState(formatDateString(new Date()));
+
+  // ── Mode B: "I know my total & capacity" fields ───────────────────────────
+  // totalCountStr: total count they want to complete over the whole vow
+  // capacityStr: how many malas/reps they can do per day
+  const [totalCountStr, setTotalCountStr] = useState('');
+  const [capacityStr, setCapacityStr] = useState('');
+  // For mode B, duration is either fixed (calculate days) or give days (calculate daily)
+  const [modeB, setModeB] = useState<'calc-days' | 'calc-daily'>('calc-days');
+  const [modeBDaysStr, setModeBDaysStr] = useState('41');
 
   /** Is the currently-selected practice a mala-type? */
   const selectedSadhana = sadhanas.find(s => s.id === sadhanaId);
   const isMalaType = selectedSadhana?.countType === 'mala';
+  const unitLabel = isMalaType ? 'Malas' : (selectedSadhana?.countUnit || 'Reps');
+
+  // ── Derived computations for planning mode ────────────────────────────────
+  const modeADailyTarget = parseInt(dailyTargetStr, 10) || 0;
+  const modeADuration = durationPreset === 'custom' ? customDuration : parseInt(durationPreset, 10);
+
+  const modeBTotal = parseInt(totalCountStr, 10) || 0;
+  const modeBCapacity = parseInt(capacityStr, 10) || 0;
+  const modeBDays = parseInt(modeBDaysStr, 10) || 0;
+
+  // Mode B calc-days: given total + daily capacity → how many days?
+  const calcDaysNeeded = useMemo(() => {
+    if (modeBTotal > 0 && modeBCapacity > 0) {
+      return Math.ceil(modeBTotal / modeBCapacity);
+    }
+    return null;
+  }, [modeBTotal, modeBCapacity]);
+
+  // Mode B calc-daily: given total + days → what daily target?
+  const calcDailyNeeded = useMemo(() => {
+    if (modeBTotal > 0 && modeBDays > 0) {
+      return Math.ceil(modeBTotal / modeBDays);
+    }
+    return null;
+  }, [modeBTotal, modeBDays]);
 
   const handleOpenAdd = () => {
     setTitle('');
     if (sadhanas.length > 0) setSadhanaId(sadhanas[0].id);
-    setTargetCount(1);
+    setDailyTargetStr('1');
     setDurationPreset('41');
+    setCustomDuration(40);
     setStartDate(formatDateString(new Date()));
+    setPlanningMode('know-daily');
+    setTotalCountStr('');
+    setCapacityStr('');
+    setModeB('calc-days');
+    setModeBDaysStr('41');
     setIsFormOpen(true);
   };
 
@@ -47,17 +97,36 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     e.preventDefault();
     if (!title.trim() || !sadhanaId) return;
 
-    const duration = durationPreset === 'custom' ? customDuration : parseInt(durationPreset, 10);
+    let finalDailyTarget = 0;
+    let finalDuration = 0;
 
-    // For mala-type sadhanas, convert the entered Mala count to raw reps before saving
-    const rawTargetCount = isMalaType ? targetCount * MALA_REPS : targetCount;
+    if (planningMode === 'know-daily') {
+      finalDailyTarget = modeADailyTarget;
+      finalDuration = modeADuration;
+    } else {
+      // Planning mode B
+      if (modeB === 'calc-days') {
+        if (!calcDaysNeeded || modeBCapacity <= 0) return;
+        finalDailyTarget = modeBCapacity;
+        finalDuration = calcDaysNeeded;
+      } else {
+        if (!calcDailyNeeded || modeBDays <= 0) return;
+        finalDailyTarget = calcDailyNeeded;
+        finalDuration = modeBDays;
+      }
+    }
+
+    if (finalDailyTarget <= 0 || finalDuration <= 0) return;
+
+    // For mala-type sadhanas, convert entered Malas count to raw reps
+    const rawTargetCount = isMalaType ? finalDailyTarget * MALA_REPS : finalDailyTarget;
 
     const newSankalp: Sankalp = {
       id: `sankalp_${Date.now()}`,
       title: title.trim(),
       sadhanaId,
       targetCount: rawTargetCount,
-      durationDays: duration,
+      durationDays: finalDuration,
       startDate,
       status: 'active'
     };
@@ -71,18 +140,15 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     return s ? s.name : 'Unknown Practice';
   };
 
-  const getSadhanaConfig = (id: string): SadhanaConfig | undefined => {
-    return sadhanas.find(item => item.id === id);
-  };
-
-  const getSadhanaUnit = (id: string) => {
-    const s = sadhanas.find(item => item.id === id);
-    if (s?.countType === 'mala') return 'Malas';
-    return s?.countUnit || 'Reps';
-  };
+  const getSadhanaConfig = (id: string): SadhanaConfig | undefined =>
+    sadhanas.find(item => item.id === id);
 
   const activeSankalps = sankalps.filter(s => s.status === 'active');
   const completedSankalps = sankalps.filter(s => s.status !== 'active');
+
+  // ── Shared input style ────────────────────────────────────────────────────
+  const inputCls = 'w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition-all focus:border-sadhana-gold/50 font-mono';
+  const labelCls = 'text-xs font-semibold text-slate-400';
 
   return (
     <div className="glass-panel rounded-lg p-6 border border-white/[0.04] shadow-sm space-y-6">
@@ -108,9 +174,10 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
         )}
       </div>
 
-      {/* Form */}
+      {/* ── Form ──────────────────────────────────────────────────────────── */}
       {isFormOpen && (
-        <form onSubmit={handleSubmit} className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.01] space-y-4 animate-fade-in">
+        <form onSubmit={handleSubmit} className="p-4 rounded-xl border border-white/[0.08] bg-white/[0.01] space-y-5 animate-fade-in">
+          {/* Form header */}
           <div className="flex justify-between items-center pb-2 border-b border-white/[0.05]">
             <h3 className="text-sm font-serif font-bold text-sadhana-gold">
               Resolve a New Sadhana Vow
@@ -124,27 +191,26 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
             </button>
           </div>
 
+          {/* Title + Practice */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Title */}
             <div className="space-y-1.5 col-span-1 md:col-span-2">
-              <label className="text-xs font-semibold text-slate-400">Vow Title (Title of Sankalp)</label>
+              <label className={labelCls}>Vow Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="e.g. 41-Day Durga Sadhana, Daily Gayatri Vow"
                 required
-                className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition-all focus:border-sadhana-gold/50"
+                className={inputCls.replace('font-mono', '')}
               />
             </div>
 
-            {/* Select Sadhana */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400">Select Practice</label>
+              <label className={labelCls}>Select Practice</label>
               <select
                 value={sadhanaId}
                 onChange={e => setSadhanaId(e.target.value)}
-                className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none transition-all focus:border-sadhana-gold/50"
+                className={inputCls}
               >
                 {sadhanas.map(s => (
                   <option key={s.id} value={s.id} className="bg-sadhana-dark text-white">
@@ -154,75 +220,293 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
               </select>
             </div>
 
-            {/* Target Daily Count */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400">
-                Daily Target
-                {isMalaType
-                  ? <span className="text-purple-300"> (Malas — 1 Mala = {MALA_REPS} Reps)</span>
-                  : <span> ({getSadhanaUnit(sadhanaId)})</span>
-                }
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={1}
-                  value={targetCount}
-                  onChange={e => setTargetCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  required
-                  className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none transition-all focus:border-sadhana-gold/50 font-mono"
-                />
-                {isMalaType && (
-                  <div className="mt-1 text-[10px] text-slate-500">
-                    = <span className="text-white font-semibold">{targetCount * MALA_REPS}</span> raw repetitions
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Duration Presets */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400">Vow Duration (Days)</label>
-              <select
-                value={durationPreset}
-                onChange={e => setDurationPreset(e.target.value as any)}
-                className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none transition-all focus:border-sadhana-gold/50"
-              >
-                <option value="11">11 Days (Short discipline)</option>
-                <option value="21">21 Days (Habit form)</option>
-                <option value="41">41 Days (Transformation - Recommended)</option>
-                <option value="108">108 Days (Complete alignment)</option>
-                <option value="custom">Custom days...</option>
-              </select>
-            </div>
-
-            {/* Custom Days Input */}
-            {durationPreset === 'custom' && (
-              <div className="space-y-1.5 animate-fade-in">
-                <label className="text-xs font-semibold text-slate-400">Enter Custom Days</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={customDuration}
-                  onChange={e => setCustomDuration(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  required
-                  className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none transition-all focus:border-sadhana-gold/50 font-mono"
-                />
-              </div>
-            )}
-
-            {/* Start Date */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-400">Start Date</label>
+              <label className={labelCls}>Start Date</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
                 required
-                className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none transition-all focus:border-sadhana-gold/50 font-mono"
+                className={inputCls}
               />
             </div>
           </div>
+
+          {/* ── Planning Mode Toggle ─────────────────────────────────────── */}
+          <div className="space-y-3">
+            <label className={labelCls}>How would you like to plan your vow?</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPlanningMode('know-daily')}
+                className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
+                  planningMode === 'know-daily'
+                    ? 'border-sadhana-gold/60 bg-sadhana-gold/5 text-white'
+                    : 'border-white/10 bg-white/[0.01] text-slate-400 hover:border-white/20'
+                }`}
+              >
+                <div className={`p-1.5 rounded-lg shrink-0 ${planningMode === 'know-daily' ? 'bg-sadhana-gold/15 text-sadhana-gold' : 'bg-white/5 text-slate-500'}`}>
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold leading-tight">I know my daily target</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Set daily count & duration days directly</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPlanningMode('know-duration')}
+                className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
+                  planningMode === 'know-duration'
+                    ? 'border-purple-400/60 bg-purple-500/5 text-white'
+                    : 'border-white/10 bg-white/[0.01] text-slate-400 hover:border-white/20'
+                }`}
+              >
+                <div className={`p-1.5 rounded-lg shrink-0 ${planningMode === 'know-duration' ? 'bg-purple-500/15 text-purple-400' : 'bg-white/5 text-slate-500'}`}>
+                  <Calculator className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold leading-tight">Calculate for me</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">Enter total goal & capacity — auto-plan</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* ── Mode A: Know Daily Target ─────────────────────────────────── */}
+          {planningMode === 'know-daily' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+              {/* Daily target */}
+              <div className="space-y-1.5">
+                <label className={labelCls}>
+                  Daily Target
+                  {isMalaType
+                    ? <span className="text-purple-300"> (Malas — 1 Mala = {MALA_REPS} Reps)</span>
+                    : <span> ({unitLabel})</span>
+                  }
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={dailyTargetStr}
+                  onChange={e => setDailyTargetStr(e.target.value)}
+                  placeholder={isMalaType ? '1' : '1'}
+                  required
+                  className={inputCls}
+                />
+                {isMalaType && modeADailyTarget > 0 && (
+                  <div className="mt-1 text-[10px] text-slate-500">
+                    = <span className="text-white font-semibold">{modeADailyTarget * MALA_REPS}</span> raw repetitions
+                  </div>
+                )}
+              </div>
+
+              {/* Duration */}
+              <div className="space-y-1.5">
+                <label className={labelCls}>Vow Duration (Days)</label>
+                <select
+                  value={durationPreset}
+                  onChange={e => setDurationPreset(e.target.value as any)}
+                  className={inputCls}
+                >
+                  <option value="11">11 Days (Short discipline)</option>
+                  <option value="21">21 Days (Habit form)</option>
+                  <option value="41">41 Days (Transformation - Recommended)</option>
+                  <option value="108">108 Days (Complete alignment)</option>
+                  <option value="custom">Custom days...</option>
+                </select>
+              </div>
+
+              {durationPreset === 'custom' && (
+                <div className="space-y-1.5 animate-fade-in">
+                  <label className={labelCls}>Enter Custom Days</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={customDuration}
+                    onChange={e => setCustomDuration(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    required
+                    className={inputCls}
+                  />
+                </div>
+              )}
+
+              {/* Summary pill */}
+              {modeADailyTarget > 0 && modeADuration > 0 && (
+                <div className="col-span-1 md:col-span-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-sadhana-gold/[0.06] border border-sadhana-gold/15">
+                  <Target className="w-3.5 h-3.5 text-sadhana-gold shrink-0" />
+                  <span className="text-xs text-slate-300">
+                    <span className="font-bold text-sadhana-gold">{modeADailyTarget} {unitLabel}/day</span>
+                    {' '}for{' '}
+                    <span className="font-bold text-white">{modeADuration} days</span>
+                    {' '}→ Total:{' '}
+                    <span className="font-bold text-sadhana-gold">
+                      {(modeADailyTarget * modeADuration).toLocaleString()} {unitLabel}
+                    </span>
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Mode B: Calculate For Me ──────────────────────────────────── */}
+          {planningMode === 'know-duration' && (
+            <div className="space-y-4 animate-fade-in">
+              {/* Sub-mode toggle */}
+              <div className="flex rounded-xl overflow-hidden border border-white/10 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setModeB('calc-days')}
+                  className={`flex-1 py-2 transition-colors ${modeB === 'calc-days' ? 'bg-purple-600/30 text-purple-300' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  How many days will I need?
+                </button>
+                <div className="w-px bg-white/10" />
+                <button
+                  type="button"
+                  onClick={() => setModeB('calc-daily')}
+                  className={`flex-1 py-2 transition-colors ${modeB === 'calc-daily' ? 'bg-purple-600/30 text-purple-300' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  What should my daily target be?
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Total count goal (shared) */}
+                <div className="space-y-1.5 col-span-1 md:col-span-2">
+                  <label className={labelCls}>
+                    Total {unitLabel} I Want to Complete (across entire vow)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={totalCountStr}
+                    onChange={e => setTotalCountStr(e.target.value)}
+                    placeholder={isMalaType ? 'e.g. 1000 Malas' : 'e.g. 100'}
+                    required
+                    className={inputCls}
+                  />
+                  {isMalaType && modeBTotal > 0 && (
+                    <div className="text-[10px] text-slate-500">
+                      = <span className="text-white font-semibold">{(modeBTotal * MALA_REPS).toLocaleString()}</span> raw repetitions total
+                    </div>
+                  )}
+                </div>
+
+                {/* Mode B - calc-days: enter daily capacity */}
+                {modeB === 'calc-days' && (
+                  <div className="space-y-1.5 col-span-1 md:col-span-2">
+                    <label className={labelCls}>
+                      My Daily Capacity ({unitLabel}/day)
+                      {isMalaType && <span className="text-purple-300"> — how many Malas can you do each day?</span>}
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={capacityStr}
+                      onChange={e => setCapacityStr(e.target.value)}
+                      placeholder={isMalaType ? 'e.g. 5' : 'e.g. 2'}
+                      required
+                      className={inputCls}
+                    />
+                  </div>
+                )}
+
+                {/* Mode B - calc-daily: enter target duration */}
+                {modeB === 'calc-daily' && (
+                  <div className="space-y-1.5 col-span-1 md:col-span-2">
+                    <label className={labelCls}>
+                      Target Vow Duration (Days)
+                    </label>
+                    <select
+                      value={modeBDaysStr}
+                      onChange={e => setModeBDaysStr(e.target.value)}
+                      className={inputCls}
+                    >
+                      <option value="11">11 Days</option>
+                      <option value="21">21 Days</option>
+                      <option value="41">41 Days (Recommended)</option>
+                      <option value="108">108 Days</option>
+                      <option value="custom">Custom...</option>
+                    </select>
+                    {modeBDaysStr === 'custom' && (
+                      <input
+                        type="number"
+                        min={1}
+                        value={modeBDays || ''}
+                        onChange={e => setModeBDaysStr(e.target.value)}
+                        placeholder="Enter days"
+                        className={`${inputCls} mt-2`}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Result panel ─────────────────────────────────────────── */}
+              {modeB === 'calc-days' && modeBTotal > 0 && modeBCapacity > 0 && calcDaysNeeded && (
+                <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold">Your Personalised Plan</p>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-white font-mono">{calcDaysNeeded}</p>
+                      <p className="text-[10px] text-slate-400">Days Required</p>
+                    </div>
+                    <div className="w-px bg-white/10 self-stretch" />
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-300 font-mono">{modeBCapacity}</p>
+                      <p className="text-[10px] text-slate-400">{unitLabel}/day</p>
+                    </div>
+                    <div className="w-px bg-white/10 self-stretch" />
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-sadhana-gold font-mono">{modeBTotal.toLocaleString()}</p>
+                      <p className="text-[10px] text-slate-400">Total {unitLabel}</p>
+                    </div>
+                  </div>
+                  {isMalaType && (
+                    <p className="text-[10px] text-slate-500 pt-1 border-t border-white/5">
+                      {modeBCapacity} Mala × {calcDaysNeeded} days = {(modeBCapacity * calcDaysNeeded).toLocaleString()} Malas completed
+                      {' '}({((modeBCapacity * calcDaysNeeded) * MALA_REPS).toLocaleString()} repetitions)
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {modeB === 'calc-daily' && modeBTotal > 0 && modeBDays > 0 && calcDailyNeeded && (
+                <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold">Your Personalised Plan</p>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-300 font-mono">{calcDailyNeeded}</p>
+                      <p className="text-[10px] text-slate-400">{unitLabel}/day needed</p>
+                    </div>
+                    <div className="w-px bg-white/10 self-stretch" />
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-white font-mono">{modeBDays}</p>
+                      <p className="text-[10px] text-slate-400">Days Duration</p>
+                    </div>
+                    <div className="w-px bg-white/10 self-stretch" />
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-sadhana-gold font-mono">{modeBTotal.toLocaleString()}</p>
+                      <p className="text-[10px] text-slate-400">Total {unitLabel}</p>
+                    </div>
+                  </div>
+                  {isMalaType && (
+                    <p className="text-[10px] text-slate-500 pt-1 border-t border-white/5">
+                      {calcDailyNeeded} Mala/day × {modeBDays} days = {(calcDailyNeeded * modeBDays).toLocaleString()} Malas
+                      {' '}({((calcDailyNeeded * modeBDays) * MALA_REPS).toLocaleString()} repetitions)
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Validation hints */}
+              {modeB === 'calc-days' && modeBTotal > 0 && modeBCapacity > 0 && !calcDaysNeeded && (
+                <p className="text-xs text-rose-400">Please enter valid values above.</p>
+              )}
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t border-white/[0.05]">
@@ -244,7 +528,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
         </form>
       )}
 
-      {/* Active Sankalps */}
+      {/* ── Active Sankalps ──────────────────────────────────────────────── */}
       <div className="space-y-4">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
           Active Resolutions
@@ -328,7 +612,6 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                         {prog.timelineDays.map((day, idx) => {
                           const dateKey = day.dateStr;
                           
-                          // Styling
                           let dotStyle = 'bg-white/[0.04] border-white/[0.05]';
                           let titleMsg = `Day ${idx + 1} (${dateKey}): Unlogged / Future`;
                           
@@ -364,7 +647,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
         )}
       </div>
 
-      {/* Completed/History Section */}
+      {/* ── History / Archive ─────────────────────────────────────────────── */}
       <div className="space-y-4 pt-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
           History & Vows Archive
