@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Flame, Shield, Flower2, Sparkles, Sun, Trash2, Check, Plus, Minus } from 'lucide-react';
 import type { SadhanaDayLog, SadhanaConfig, SadhanaColorPreset, Sankalp } from '../types';
-import { getColorHex, getOffsetDateString } from '../sadhanaUtils';
+import { getColorHex, getOffsetDateString, MALA_REPS, formatSadhanaCount } from '../sadhanaUtils';
 
 interface SadhanaModalProps {
   date: Date;
@@ -222,7 +222,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                               )}
                               {activeVow && (
                                 <div className="text-[10px] font-bold text-sadhana-gold flex items-center gap-1 mt-1">
-                                  <span>🎯 Daily Vow Target: {activeVow.targetCount} {s.countUnit || 'Reps'}</span>
+                                  <span>🎯 Daily Vow Target: {formatSadhanaCount(activeVow.targetCount, s)}</span>
                                 </div>
                               )}
                             </div>
@@ -232,39 +232,121 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
 
                       {/* Count adjustor (visible when checked) */}
                       {isChecked && s.hasCount && (
-                        <div className="flex items-center justify-between pl-9 pr-2 py-1 bg-white/[0.01] rounded-lg border border-white/[0.04] animate-fade-in">
-                          <span className="text-xs text-slate-400 font-medium">
-                            {s.countUnit || 'Reps'}
-                          </span>
-                          
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() => handleDecrement(s.id)}
-                              className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-                              type="button"
-                            >
-                              <Minus className="w-3.5 h-3.5" />
-                            </button>
-                            
-                            <input
-                              type="number"
-                              min={1}
-                              value={count}
-                              onChange={e => {
-                                const val = Math.max(1, parseInt(e.target.value, 10) || 1);
-                                setCounts(prev => ({ ...prev, [s.id]: val }));
-                              }}
-                              className="w-14 bg-sadhana-dark border border-white/10 rounded px-1.5 py-0.5 text-center text-sm font-bold text-white outline-none focus:border-sadhana-gold/50 font-mono"
-                            />
-                            
-                            <button
-                              onClick={() => handleIncrement(s.id)}
-                              className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-                              type="button"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                        <div className="pl-9 pr-2 space-y-2 animate-fade-in">
+                          {s.countType === 'mala' ? (
+                            // === MALA TYPE: Dual adjuster (Malas + Reps) ===
+                            <div className="space-y-2">
+                              <div className="text-[10px] text-slate-500 font-medium bg-purple-500/5 border border-purple-500/15 rounded-lg px-3 py-1.5 text-center">
+                                🙿 1 Mala = {MALA_REPS} Repetitions &mdash; both adjusters sync automatically
+                              </div>
+                              <div className="flex gap-2">
+                                {/* Malas Adjuster */}
+                                <div className="flex-1 flex items-center justify-between py-1 px-2 bg-purple-500/5 rounded-lg border border-purple-500/20">
+                                  <span className="text-[10px] text-purple-300 font-semibold">Malas</span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => {
+                                        const cur = counts[s.id] ?? MALA_REPS;
+                                        setCounts(prev => ({ ...prev, [s.id]: Math.max(0, cur - MALA_REPS) }));
+                                      }}
+                                      className="w-6 h-6 rounded bg-purple-500/10 hover:bg-purple-500/25 flex items-center justify-center text-purple-300 hover:text-white transition-colors"
+                                      type="button"
+                                    >
+                                      <Minus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <span className="w-10 text-center text-sm font-bold text-white font-mono">
+                                      {Math.floor((counts[s.id] ?? MALA_REPS) / MALA_REPS)}
+                                    </span>
+                                    <button
+                                      onClick={() => {
+                                        const cur = counts[s.id] ?? MALA_REPS;
+                                        setCounts(prev => ({ ...prev, [s.id]: cur + MALA_REPS }));
+                                      }}
+                                      className="w-6 h-6 rounded bg-purple-500/10 hover:bg-purple-500/25 flex items-center justify-center text-purple-300 hover:text-white transition-colors"
+                                      type="button"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Reps Adjuster */}
+                                <div className="flex-1 flex items-center justify-between py-1 px-2 bg-white/[0.01] rounded-lg border border-white/[0.06]">
+                                  <span className="text-[10px] text-slate-400 font-semibold">Reps</span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => {
+                                        const cur = counts[s.id] ?? MALA_REPS;
+                                        setCounts(prev => ({ ...prev, [s.id]: Math.max(0, cur - 1) }));
+                                      }}
+                                      className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                      type="button"
+                                    >
+                                      <Minus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={counts[s.id] ?? MALA_REPS}
+                                      onChange={e => {
+                                        const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                                        setCounts(prev => ({ ...prev, [s.id]: val }));
+                                      }}
+                                      className="w-14 bg-sadhana-dark border border-white/10 rounded px-1.5 py-0.5 text-center text-sm font-bold text-white outline-none focus:border-sadhana-gold/50 font-mono"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        const cur = counts[s.id] ?? MALA_REPS;
+                                        setCounts(prev => ({ ...prev, [s.id]: cur + 1 }));
+                                      }}
+                                      className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                      type="button"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Summary line */}
+                              <div className="text-center text-[10px] text-slate-500">
+                                Total: <span className="text-white font-semibold">{formatSadhanaCount(counts[s.id] ?? MALA_REPS, s)}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            // === REPS TYPE: Standard single adjuster ===
+                            <div className="flex items-center justify-between py-1 bg-white/[0.01] rounded-lg border border-white/[0.04]">
+                              <span className="text-xs text-slate-400 font-medium">
+                                {s.countUnit || 'Reps'}
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <button
+                                  onClick={() => handleDecrement(s.id)}
+                                  className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                  type="button"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={count}
+                                  onChange={e => {
+                                    const val = Math.max(1, parseInt(e.target.value, 10) || 1);
+                                    setCounts(prev => ({ ...prev, [s.id]: val }));
+                                  }}
+                                  className="w-14 bg-sadhana-dark border border-white/10 rounded px-1.5 py-0.5 text-center text-sm font-bold text-white outline-none focus:border-sadhana-gold/50 font-mono"
+                                />
+                                <button
+                                  onClick={() => handleIncrement(s.id)}
+                                  className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                  type="button"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

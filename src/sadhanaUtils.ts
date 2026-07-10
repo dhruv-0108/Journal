@@ -9,6 +9,26 @@ import type {
   TimeframeMetrics
 } from './types';
 
+/** 1 Mala = 108 repetitions (standard japa mala bead count) */
+export const MALA_REPS = 108;
+
+/**
+ * Format a raw repetition count for display based on a sadhana's countType.
+ * - 'reps' type → "5 Times Recited", "20 Minutes", etc.
+ * - 'mala' type → "1 Mala", "2 Mala & 54 Reps", "54 Reps"
+ */
+export const formatSadhanaCount = (count: number, config?: SadhanaConfig): string => {
+  if (!config?.hasCount) return '';
+  if (config.countType === 'mala') {
+    const malas = Math.floor(count / MALA_REPS);
+    const reps = count % MALA_REPS;
+    if (malas > 0 && reps > 0) return `${malas} Mala & ${reps} Reps`;
+    if (malas > 0) return `${malas} Mala${malas > 1 ? 's' : ''}`;
+    return `${reps} Reps`;
+  }
+  return `${count} ${config.countUnit || 'Reps'}`;
+};
+
 // Default presets
 export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
   {
@@ -18,6 +38,7 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     description: 'Devotional hymn dedicated to Lord Hanuman, invoking physical/mental strength and courage.',
     colorPreset: 'saffron',
     hasCount: true,
+    countType: 'reps',
     countUnit: 'Times Recited',
     defaultCount: 1
   },
@@ -28,6 +49,7 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     description: 'A powerful, foundational stotra from the Durga Saptashati, representing shakti and spiritual protection.',
     colorPreset: 'crimson',
     hasCount: true,
+    countType: 'reps',
     countUnit: 'Times Recited',
     defaultCount: 1
   },
@@ -38,8 +60,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     description: 'A transformative, rhythmic cosmic chant (Aim Hreem Kleem...) to balance inner spiritual forces.',
     colorPreset: 'purple',
     hasCount: true,
-    countUnit: 'Malas (108x)',
-    defaultCount: 1
+    countType: 'mala',  // Tracked in raw reps; 1 Mala = 108 reps
+    countUnit: 'Reps',
+    defaultCount: 108   // 1 Mala default
   },
   {
     id: 'deviatharvashirsha',
@@ -48,6 +71,7 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     description: 'Vedic text praising the Divine Mother as the absolute source of creation.',
     colorPreset: 'blue',
     hasCount: true,
+    countType: 'reps',
     countUnit: 'Times Recited',
     defaultCount: 1
   },
@@ -58,12 +82,72 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     description: 'Rigvedic hymn invoking Divine Grace, inner light, abundance, and spiritual prosperity.',
     colorPreset: 'emerald',
     hasCount: true,
+    countType: 'reps',
     countUnit: 'Times Recited',
     defaultCount: 1
   }
 ];
 
 const STORE_LOCAL_STORAGE_KEY = 'sadhana_journal_store_v2';
+
+/**
+ * One-time migration: old logs stored mala counts as small integers (e.g. 1, 2, 3 malas).
+ * We now store raw repetitions, so we multiply those small values by MALA_REPS.
+ * We also ensure the default sadhana entries receive the new countType field.
+ */
+const migrateStoreToReps = (store: SadhanaStore): SadhanaStore => {
+  if (store.migratedToReps) return store;
+
+  // Identify mala-type sadhana IDs from current config (both preset and user-created)
+  const malaSadhanaIds = new Set<string>(
+    store.sadhanas
+      .filter(s => s.countType === 'mala' || s.countUnit === 'Malas (108x)')
+      .map(s => s.id)
+  );
+
+  // Also ensure preset sadhanas get countType if missing
+  const migratedSadhanas = store.sadhanas.map(s => {
+    const preset = DEFAULT_SADHANA_LIST.find(d => d.id === s.id);
+    if (preset && !s.countType) {
+      return { ...s, countType: preset.countType };
+    }
+    // Old navarna stored as 'Malas (108x)' unit – upgrade it
+    if (s.countUnit === 'Malas (108x)' && !s.countType) {
+      return { ...s, countType: 'mala' as const, countUnit: 'Reps', defaultCount: 108 };
+    }
+    return s;
+  });
+
+  // Migrate log counts
+  const migratedLogs: SadhanaStore['logs'] = {};
+  Object.entries(store.logs).forEach(([dateStr, log]) => {
+    const migratedCounts = { ...log.counts };
+    malaSadhanaIds.forEach(id => {
+      const val = migratedCounts[id];
+      // Only multiply if the value is small (old format stored 1/2/3 malas, not 108/216)
+      if (val !== undefined && val > 0 && val < MALA_REPS) {
+        migratedCounts[id] = val * MALA_REPS;
+      }
+    });
+    migratedLogs[dateStr] = { ...log, counts: migratedCounts };
+  });
+
+  // Migrate sankalp target counts
+  const migratedSankalps = store.sankalps.map(s => {
+    if (malaSadhanaIds.has(s.sadhanaId) && s.targetCount > 0 && s.targetCount < MALA_REPS) {
+      return { ...s, targetCount: s.targetCount * MALA_REPS };
+    }
+    return s;
+  });
+
+  return {
+    ...store,
+    sadhanas: migratedSadhanas,
+    sankalps: migratedSankalps,
+    logs: migratedLogs,
+    migratedToReps: true
+  };
+};
 
 export const loadStore = (): SadhanaStore => {
   try {
@@ -74,7 +158,12 @@ export const loadStore = (): SadhanaStore => {
       if (!parsed.sadhanas || parsed.sadhanas.length === 0) parsed.sadhanas = DEFAULT_SADHANA_LIST;
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
-      return parsed;
+      // Run one-time migration to raw reps
+      const migrated = migrateStoreToReps(parsed);
+      if (!parsed.migratedToReps) {
+        saveStore(migrated); // persist migration immediately
+      }
+      return migrated;
     }
     
     // Fallback/Migration check from old format
@@ -84,7 +173,8 @@ export const loadStore = (): SadhanaStore => {
     const initialStore: SadhanaStore = {
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
-      logs: initialLogs
+      logs: initialLogs,
+      migratedToReps: true  // Fresh store – no migration needed
     };
     saveStore(initialStore);
     return initialStore;
@@ -93,7 +183,8 @@ export const loadStore = (): SadhanaStore => {
     return {
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
-      logs: {}
+      logs: {},
+      migratedToReps: true
     };
   }
 };
@@ -325,7 +416,8 @@ export const generateMockStoreData = (): SadhanaStore => {
       const counts: Record<string, number> = {
         hanuman_chalisa: completed.hanuman_chalisa ? 1 : 0,
         sidhkunjika_stotra: completed.sidhkunjika_stotra ? 1 : 0,
-        navarna_mantra: completed.navarna_mantra ? (Math.random() > 0.6 ? 3 : 1) : 0,
+        // navarna_mantra is mala-type – store raw reps (108 = 1 Mala, 324 = 3 Malas)
+        navarna_mantra: completed.navarna_mantra ? (Math.random() > 0.6 ? 324 : 108) : 0,
         deviatharvashirsha: completed.deviatharvashirsha ? 1 : 0,
         sri_suktam: completed.sri_suktam ? 1 : 0
       };

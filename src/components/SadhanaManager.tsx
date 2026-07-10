@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, X, Check } from 'lucide-react';
-import type { SadhanaConfig, SadhanaColorPreset } from '../types';
-import { getColorHex } from '../sadhanaUtils';
+import { Plus, Edit2, Trash2, X, Check, Repeat, Circle } from 'lucide-react';
+import type { SadhanaConfig, SadhanaColorPreset, SadhanaCountType } from '../types';
+import { getColorHex, MALA_REPS } from '../sadhanaUtils';
 
 interface SadhanaManagerProps {
   sadhanas: SadhanaConfig[];
@@ -35,6 +35,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
   const [description, setDescription] = useState('');
   const [colorPreset, setColorPreset] = useState<SadhanaColorPreset>('saffron');
   const [hasCount, setHasCount] = useState(true);
+  const [countType, setCountType] = useState<SadhanaCountType>('reps');
   const [countUnit, setCountUnit] = useState('Times Recited');
 
   const resetForm = () => {
@@ -43,6 +44,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
     setDescription('');
     setColorPreset('saffron');
     setHasCount(true);
+    setCountType('reps');
     setCountUnit('Times Recited');
     setEditingId(null);
     setIsFormOpen(false);
@@ -60,6 +62,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
     setDescription(s.description || '');
     setColorPreset(s.colorPreset);
     setHasCount(s.hasCount);
+    setCountType(s.countType || 'reps');
     setCountUnit(s.countUnit || 'Times Recited');
     setIsFormOpen(true);
   };
@@ -75,8 +78,9 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
       description: description.trim() || undefined,
       colorPreset,
       hasCount,
-      countUnit: hasCount ? countUnit.trim() || 'Times Recited' : undefined,
-      defaultCount: hasCount ? 1 : undefined
+      countType: hasCount ? countType : undefined,
+      countUnit: (hasCount && countType === 'reps') ? (countUnit.trim() || 'Times Recited') : undefined,
+      defaultCount: hasCount ? (countType === 'mala' ? MALA_REPS : 1) : undefined
     };
 
     if (editingId) {
@@ -174,7 +178,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
             />
           </div>
 
-          {/* Count Toggle & Unit */}
+          {/* Count Toggle & Mode */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             
             {/* Has Count Checkbox */}
@@ -198,21 +202,73 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
               </div>
             </button>
 
-            {/* Count Unit */}
-            {hasCount && (
+            {/* Count Unit (only for reps mode) */}
+            {hasCount && countType === 'reps' && (
               <div className="space-y-1.5 animate-fade-in">
                 <label className="text-xs font-semibold text-slate-400">Unit of Count</label>
                 <input
                   type="text"
                   value={countUnit}
                   onChange={e => setCountUnit(e.target.value)}
-                  placeholder="e.g. Minutes, Malas (108x), Times Recited"
+                  placeholder="e.g. Minutes, Times Recited"
                   required
                   className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition-all focus:border-sadhana-gold/50"
                 />
               </div>
             )}
           </div>
+
+          {/* Count Mode selector (only shown when hasCount is enabled) */}
+          {hasCount && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="text-xs font-semibold text-slate-400 block">Count Mode</label>
+              <div className="flex gap-3">
+                {/* Simple Reps option */}
+                <button
+                  type="button"
+                  onClick={() => setCountType('reps')}
+                  className={`
+                    flex-1 flex items-center gap-2.5 px-4 py-3 rounded-xl border text-left transition-all
+                    ${countType === 'reps'
+                      ? 'border-sadhana-gold/60 bg-sadhana-gold/8 text-white'
+                      : 'border-white/10 bg-white/[0.01] text-slate-400 hover:text-white hover:border-white/20'
+                    }
+                  `}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${countType === 'reps' ? 'bg-sadhana-gold/15 text-sadhana-gold' : 'bg-white/5 text-slate-500'}`}>
+                    <Repeat className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold">Simple Repetitions</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Count in times recited, minutes, etc.</div>
+                  </div>
+                  {countType === 'reps' && <Check className="w-3.5 h-3.5 ml-auto text-sadhana-gold stroke-[3px] shrink-0" />}
+                </button>
+
+                {/* Mala Chanting option */}
+                <button
+                  type="button"
+                  onClick={() => setCountType('mala')}
+                  className={`
+                    flex-1 flex items-center gap-2.5 px-4 py-3 rounded-xl border text-left transition-all
+                    ${countType === 'mala'
+                      ? 'border-purple-500/60 bg-purple-500/8 text-white'
+                      : 'border-white/10 bg-white/[0.01] text-slate-400 hover:text-white hover:border-white/20'
+                    }
+                  `}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${countType === 'mala' ? 'bg-purple-500/15 text-purple-400' : 'bg-white/5 text-slate-500'}`}>
+                    <Circle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold">Mala Chanting</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">1 Mala = {MALA_REPS} repetitions</div>
+                  </div>
+                  {countType === 'mala' && <Check className="w-3.5 h-3.5 ml-auto text-purple-400 stroke-[3px] shrink-0" />}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Color Preset Selector */}
           <div className="space-y-2">
@@ -297,8 +353,16 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
                 </div>
 
                 {s.hasCount && (
-                  <span className="inline-block mt-3 text-[10px] px-2 py-0.5 rounded bg-white/[0.04] text-slate-400 font-mono">
-                    Unit: {s.countUnit || 'Reps'}
+                  <span className="inline-block mt-3 text-[10px] px-2 py-0.5 rounded font-mono">
+                    {s.countType === 'mala' ? (
+                      <span className="bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">
+                        🙿 Mala Chanting (1 Mala = 108 Reps)
+                      </span>
+                    ) : (
+                      <span className="bg-white/[0.04] text-slate-400">
+                        Unit: {s.countUnit || 'Reps'}
+                      </span>
+                    )}
                   </span>
                 )}
               </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, X, Calendar, Sparkles, Trash2 } from 'lucide-react';
 import type { Sankalp, SadhanaConfig, SadhanaLogs } from '../types';
-import { getSankalpProgress, formatDateString } from '../sadhanaUtils';
+import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount } from '../sadhanaUtils';
 
 interface SankalpManagerProps {
   sankalps: Sankalp[];
@@ -25,10 +25,14 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   // Form states
   const [title, setTitle] = useState('');
   const [sadhanaId, setSadhanaId] = useState(sadhanas[0]?.id || '');
-  const [targetCount, setTargetCount] = useState(1);
+  const [targetCount, setTargetCount] = useState(1);    // in Malas for mala-type, in reps for reps-type
   const [durationPreset, setDurationPreset] = useState<'11' | '21' | '41' | '108' | 'custom'>('41');
   const [customDuration, setCustomDuration] = useState(40);
   const [startDate, setStartDate] = useState(formatDateString(new Date()));
+
+  /** Is the currently-selected practice a mala-type? */
+  const selectedSadhana = sadhanas.find(s => s.id === sadhanaId);
+  const isMalaType = selectedSadhana?.countType === 'mala';
 
   const handleOpenAdd = () => {
     setTitle('');
@@ -45,11 +49,14 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
 
     const duration = durationPreset === 'custom' ? customDuration : parseInt(durationPreset, 10);
 
+    // For mala-type sadhanas, convert the entered Mala count to raw reps before saving
+    const rawTargetCount = isMalaType ? targetCount * MALA_REPS : targetCount;
+
     const newSankalp: Sankalp = {
       id: `sankalp_${Date.now()}`,
       title: title.trim(),
       sadhanaId,
-      targetCount,
+      targetCount: rawTargetCount,
       durationDays: duration,
       startDate,
       status: 'active'
@@ -64,8 +71,13 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     return s ? s.name : 'Unknown Practice';
   };
 
+  const getSadhanaConfig = (id: string): SadhanaConfig | undefined => {
+    return sadhanas.find(item => item.id === id);
+  };
+
   const getSadhanaUnit = (id: string) => {
     const s = sadhanas.find(item => item.id === id);
+    if (s?.countType === 'mala') return 'Malas';
     return s?.countUnit || 'Reps';
   };
 
@@ -145,16 +157,27 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
             {/* Target Daily Count */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-400">
-                Daily Target Count ({getSadhanaUnit(sadhanaId)})
+                Daily Target
+                {isMalaType
+                  ? <span className="text-purple-300"> (Malas — 1 Mala = {MALA_REPS} Reps)</span>
+                  : <span> ({getSadhanaUnit(sadhanaId)})</span>
+                }
               </label>
-              <input
-                type="number"
-                min={1}
-                value={targetCount}
-                onChange={e => setTargetCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                required
-                className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none transition-all focus:border-sadhana-gold/50 font-mono"
-              />
+              <div className="relative">
+                <input
+                  type="number"
+                  min={1}
+                  value={targetCount}
+                  onChange={e => setTargetCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  required
+                  className="w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none transition-all focus:border-sadhana-gold/50 font-mono"
+                />
+                {isMalaType && (
+                  <div className="mt-1 text-[10px] text-slate-500">
+                    = <span className="text-white font-semibold">{targetCount * MALA_REPS}</span> raw repetitions
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Duration Presets */}
@@ -232,7 +255,6 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
             {activeSankalps.map(s => {
               const prog = getSankalpProgress(s, logs);
               const sadhanaName = getSadhanaName(s.sadhanaId);
-              const unit = getSadhanaUnit(s.sadhanaId);
 
               return (
                 <div 
@@ -251,7 +273,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                         <div className="text-[10px] text-slate-500 font-sans mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 items-center">
                           <span className="text-sadhana-gold font-semibold">{sadhanaName}</span>
                           <span>•</span>
-                          <span>Daily Target: {s.targetCount} {unit}</span>
+                          <span>Daily Target: {formatSadhanaCount(s.targetCount, getSadhanaConfig(s.sadhanaId))}</span>
                           <span>•</span>
                           <span className="flex items-center gap-0.5 font-mono"><Calendar className="w-3 h-3" /> Start: {s.startDate}</span>
                         </div>
