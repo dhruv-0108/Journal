@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, X, Calendar, Sparkles, Trash2, Target } from 'lucide-react';
 import type { Sankalp, SadhanaConfig, SadhanaLogs } from '../types';
-import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount, getOffsetDateString } from '../sadhanaUtils';
+import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount, getOffsetDateString, MASTER_SADHANA_DATABASE } from '../sadhanaUtils';
 
 interface SankalpManagerProps {
   sankalps: Sankalp[];
@@ -19,13 +19,24 @@ type CalcSub    = 'calc-days' | 'calc-daily';
 export const SankalpManager: React.FC<SankalpManagerProps> = ({
   sankalps, sadhanas, logs, onAdd, onUpdateStatus, onDelete
 }) => {
+  const dropdownSadhanas = useMemo(() => {
+    return sadhanas.length > 0 ? sadhanas : MASTER_SADHANA_DATABASE;
+  }, [sadhanas]);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // ── Core fields ──────────────────────────────────────────────────────────
   const [title, setTitle]       = useState('');
-  const [sadhanaId, setSadhanaId] = useState(sadhanas[0]?.id || '');
+  const [sadhanaId, setSadhanaId] = useState(() => dropdownSadhanas[0]?.id || '');
   const [startDate, setStartDate] = useState(formatDateString(new Date()));
   const [practiceType, setPracticeType] = useState<'stotra' | 'mantra'>('stotra');
+
+  useEffect(() => {
+    if (!sadhanaId && dropdownSadhanas[0]?.id) {
+      setSadhanaId(dropdownSadhanas[0].id);
+      setPracticeType(dropdownSadhanas[0].countType === 'mala' ? 'mantra' : 'stotra');
+    }
+  }, [dropdownSadhanas, sadhanaId]);
 
   // ── Goal (Step 2) ────────────────────────────────────────────────────────
   const [goalStr,  setGoalStr]  = useState('');          // raw string the user types
@@ -38,7 +49,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   const [modeBDaysStr, setModeBDaysStr] = useState('41'); // duration for calc-daily
 
   // ── Derived: selected sadhana metadata ───────────────────────────────────
-  const selectedSadhana = sadhanas.find(s => s.id === sadhanaId);
+  const selectedSadhana = dropdownSadhanas.find(s => s.id === sadhanaId);
   const isMalaType      = practiceType === 'mantra';
   const repUnit         = isMalaType ? 'Reps' : (selectedSadhana?.countUnit || 'Times');
 
@@ -91,7 +102,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   // ── Reset form ────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
     setTitle(''); setGoalStr(''); setGoalUnit('mala');
-    const defaultSadhana = sadhanas[0];
+    const defaultSadhana = dropdownSadhanas[0];
     if (defaultSadhana) {
       setSadhanaId(defaultSadhana.id);
       setPracticeType(defaultSadhana.countType === 'mala' ? 'mantra' : 'stotra');
@@ -104,7 +115,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
 
   const handleSadhanaChange = (id: string) => {
     setSadhanaId(id);
-    const config = sadhanas.find(s => s.id === id);
+    const config = dropdownSadhanas.find(s => s.id === id);
     if (config) {
       setPracticeType(config.countType === 'mala' ? 'mantra' : 'stotra');
     }
@@ -148,8 +159,8 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     setIsFormOpen(false);
   };
 
-  const getSadhanaName   = (id: string) => sadhanas.find(s => s.id === id)?.name ?? 'Unknown Practice';
-  const getSadhanaConfig = (id: string): SadhanaConfig | undefined => sadhanas.find(s => s.id === id);
+  const getSadhanaName   = (id: string) => dropdownSadhanas.find(s => s.id === id)?.name ?? 'Unknown Practice';
+  const getSadhanaConfig = (id: string): SadhanaConfig | undefined => dropdownSadhanas.find(s => s.id === id);
 
   const activeSankalps    = sankalps.filter(s => s.status === 'active');
   const completedSankalps = sankalps.filter(s => s.status !== 'active');
@@ -206,8 +217,8 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
           <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
-            disabled={sadhanas.length === 0}
-            style={{ opacity: sadhanas.length === 0 ? 0.5 : 1 }}
+            disabled={dropdownSadhanas.length === 0}
+            style={{ opacity: dropdownSadhanas.length === 0 ? 0.5 : 1 }}
           >
             <Plus className="w-4 h-4" />
             Resolve New Vow
@@ -250,7 +261,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                 onChange={e => handleSadhanaChange(e.target.value)}
                 className={inputCls}
               >
-                {sadhanas.map(s => (
+                {dropdownSadhanas.map(s => (
                   <option key={s.id} value={s.id} className="bg-sadhana-dark text-white">
                     {s.name} {s.sanskritName ? `(${s.sanskritName})` : ''}
                   </option>

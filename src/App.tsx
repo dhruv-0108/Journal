@@ -17,30 +17,6 @@ import { AuthPage } from './components/AuthPage';
 
 type TabId = 'dashboard' | 'vows' | 'settings';
 
-const GUEST_MOCK_SADHANAS: SadhanaConfig[] = [
-  {
-    id: 'hanuman_chalisa',
-    name: 'Hanuman Chalisa',
-    sanskritName: 'हनुमान चालीसा',
-    description: 'Devotional hymn dedicated to Lord Hanuman, invoking physical/mental strength and courage.',
-    colorPreset: 'saffron',
-    hasCount: true,
-    countType: 'reps',
-    countUnit: 'Times Recited',
-    defaultCount: 1
-  },
-  {
-    id: 'gayatri_mantra',
-    name: 'Gayatri Mantra',
-    sanskritName: 'गायत्री मंत्र',
-    description: 'A highly revered Vedic chant invoking solar consciousness, wisdom, and spiritual illumination.',
-    colorPreset: 'saffron',
-    hasCount: true,
-    countType: 'mala',
-    countUnit: 'Reps',
-    defaultCount: 108
-  }
-];
 
 function App() {
   const [store, setStore] = useState<SadhanaStore>({
@@ -276,7 +252,7 @@ function App() {
     setIsModalOpen(true);
   };
 
-  const displaySadhanas = (!currentUser && store.sadhanas.length === 0) ? GUEST_MOCK_SADHANAS : store.sadhanas;
+  const displaySadhanas = store.sadhanas;
   const stats = calculateDashboardStats(displaySadhanas, store.logs);
   const selectedDateStr = formatDateString(selectedDate);
   const selectedDayLog = store.logs[selectedDateStr];
