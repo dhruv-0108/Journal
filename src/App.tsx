@@ -13,7 +13,7 @@ import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores } from './firebaseUtils';
-import { AuthModal } from './components/AuthModal';
+import { AuthPage } from './components/AuthPage';
 
 type TabId = 'dashboard' | 'vows' | 'settings';
 
@@ -29,13 +29,11 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [greeting, setGreeting] = useState<string>('Welcome to your spiritual space');
   
-  // Onboarding name states
-  const [tempName, setTempName] = useState('');
   const [tempUsernameEdit, setTempUsernameEdit] = useState('');
 
   // Firebase Auth states
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [showAuthPage, setShowAuthPage] = useState(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
 
   // 1. Listen to Firebase Auth state
@@ -101,15 +99,6 @@ function App() {
     });
   };
 
-  // Onboarding Name Handlers
-  const handleSaveNameOnboarding = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tempName.trim()) return;
-    updateStore(prev => ({
-      ...prev,
-      username: tempName.trim()
-    }));
-  };
 
   const handleSaveUsernameEdit = () => {
     if (!tempUsernameEdit.trim()) return;
@@ -229,68 +218,40 @@ function App() {
   const selectedDateStr = formatDateString(selectedDate);
   const selectedDayLog = store.logs[selectedDateStr];
 
-  // Render First-Time Onboarding Screen if username is missing
-  if (!store.username && !isCloudSyncing) {
+  // Show full-screen loader if authenticating or syncing on startup
+  if (isCloudSyncing && !store.username) {
     return (
-      <div className="min-h-screen bg-sadhana-dark flex items-center justify-center p-4">
-        <form 
-          onSubmit={handleSaveNameOnboarding}
-          className="glass-panel w-full max-w-md p-8 rounded-lg shadow-2xl border border-white/[0.04] text-center space-y-6 animate-fade-in"
-        >
-          <div className="flex justify-center text-sadhana-gold-accent">
-            <Compass className="w-12 h-12 animate-spin" style={{ animationDuration: '40s' }} />
-          </div>
-          
-          <div className="space-y-2">
-            <h1 className="text-3xl font-serif font-semibold text-white tracking-widest leading-none">
-              SADHANA MANDALA
-            </h1>
-            <p className="text-[10px] text-slate-500 font-sans uppercase tracking-[0.2em] font-semibold mt-1">
-              Spiritual Path Journal & Vows Tracker
-            </p>
-          </div>
-
-          <div className="h-[1px] w-24 mx-auto bg-gradient-to-r from-transparent via-sadhana-gold-accent/50 to-transparent" />
-
-          <div className="space-y-4 pt-2">
-            <p className="text-sm text-slate-300 font-serif italic">
-              "Welcome to your sacred space. What is your name?"
-            </p>
-            <input
-              type="text"
-              value={tempName}
-              onChange={e => setTempName(e.target.value)}
-              placeholder="Your name"
-              required
-              className="w-64 max-w-full bg-transparent border-b border-white/20 text-white text-center text-xl pb-2 focus:border-sadhana-gold-accent outline-none font-serif transition-colors"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-3 bg-sadhana-gold hover:bg-sadhana-gold-accent text-black rounded-lg font-semibold transition-all font-sans shadow-lg shadow-sadhana-gold/10"
-          >
-            Enter Journal
-          </button>
-
-          <div className="text-center pt-2">
-            <button
-              type="button"
-              onClick={() => setIsAuthModalOpen(true)}
-              className="text-xs text-slate-500 hover:text-sadhana-gold-accent transition-colors font-sans"
-            >
-              Already have an account? Sign In
-            </button>
-          </div>
-        </form>
-
-        {/* Auth Modal */}
-        <AuthModal 
-          isOpen={isAuthModalOpen}
-          onClose={() => setIsAuthModalOpen(false)}
-          onSuccess={() => {}}
-        />
+      <div className="min-h-screen bg-[#07060a] flex flex-col items-center justify-center gap-4 text-sadhana-gold-accent font-sans">
+        <Compass className="w-16 h-16 animate-spin text-sadhana-gold" style={{ animationDuration: '6s' }} />
+        <span className="text-sm font-serif tracking-[0.2em] uppercase text-slate-400">Loading Sadhana Mandala...</span>
       </div>
+    );
+  }
+
+  // Render AuthPage if user needs to authenticate or is creating guest
+  const needsAuth = !currentUser && (!store.username || showAuthPage);
+  if (needsAuth) {
+    return (
+      <AuthPage
+        currentGuestName={store.username}
+        isCloudSyncing={isCloudSyncing}
+        onSuccess={async (registeredName) => {
+          setShowAuthPage(false);
+          if (registeredName) {
+            updateStore(prev => ({
+              ...prev,
+              username: registeredName
+            }));
+          }
+        }}
+        onContinueGuest={(guestName) => {
+          updateStore(prev => ({
+            ...prev,
+            username: guestName
+          }));
+          setShowAuthPage(false);
+        }}
+      />
     );
   }
 
@@ -325,7 +286,7 @@ function App() {
               <span>Guest Mode (Local Only)</span>
               <span className="text-slate-600">•</span>
               <button 
-                onClick={() => setIsAuthModalOpen(true)}
+                onClick={() => setShowAuthPage(true)}
                 className="text-sadhana-gold-accent hover:text-white font-semibold transition-colors flex items-center gap-0.5"
               >
                 <Cloud className="w-3 h-3" />
@@ -499,12 +460,7 @@ function App() {
         onDelete={handleDeleteLog}
       />
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={() => {}}
-      />
+
 
     </div>
   );
