@@ -31,6 +31,7 @@ export const formatSadhanaCount = (count: number, config?: SadhanaConfig): strin
 
 // Default presets
 export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
+  // ── Stotras ──────────────────────────────────────────────────────────────
   {
     id: 'hanuman_chalisa',
     name: 'Hanuman Chalisa',
@@ -54,17 +55,6 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     defaultCount: 1
   },
   {
-    id: 'navarna_mantra',
-    name: 'Navarna Mantra',
-    sanskritName: 'नवार्ण मंत्र',
-    description: 'A transformative, rhythmic cosmic chant (Aim Hreem Kleem...) to balance inner spiritual forces.',
-    colorPreset: 'purple',
-    hasCount: true,
-    countType: 'mala',  // Tracked in raw reps; 1 Mala = 108 reps
-    countUnit: 'Reps',
-    defaultCount: 108   // 1 Mala default
-  },
-  {
     id: 'deviatharvashirsha',
     name: 'Devi Atharvashirsha',
     sanskritName: 'देवी अथर्वशीर्ष',
@@ -85,6 +75,161 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     countType: 'reps',
     countUnit: 'Times Recited',
     defaultCount: 1
+  },
+  {
+    id: 'lalita_sahasranama',
+    name: 'Lalita Sahasranama',
+    sanskritName: 'ललिता सहस्रनाम',
+    description: 'A sacred text reciting the thousand names of the Hindu Mother Goddess Lalita Tripurasundari.',
+    colorPreset: 'crimson',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1
+  },
+  {
+    id: 'vishnu_sahasranama',
+    name: 'Vishnu Sahasranama',
+    sanskritName: 'विष्णु सहस्रनाम',
+    description: 'A list of 1,000 names of Lord Vishnu, invoking cosmic order, protection, and spiritual evolution.',
+    colorPreset: 'blue',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1
+  },
+  {
+    id: 'shiva_tandava',
+    name: 'Shiva Tandava Stotram',
+    sanskritName: 'शिव ताण्डव स्तोत्रम्',
+    description: 'A powerful stotra composed by Ravana, describing Lord Shiva\'s ecstatic and powerful cosmic dance.',
+    colorPreset: 'purple',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1
+  },
+  {
+    id: 'durga_chalisa',
+    name: 'Durga Chalisa',
+    sanskritName: 'दुर्गा चालीसा',
+    description: 'Forty devotional verses dedicated to Goddess Durga, invoking maternal protection and strength.',
+    colorPreset: 'crimson',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1
+  },
+  {
+    id: 'kanakadhara_stotra',
+    name: 'Kanakadhara Stotram',
+    sanskritName: 'कनकधारा स्तोत्रम्',
+    description: 'Composed by Adi Shankara, invoking Goddess Lakshmi for abundance, grace, and prosperity.',
+    colorPreset: 'emerald',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1
+  },
+  {
+    id: 'aditya_hrudaya',
+    name: 'Aditya Hrudaya Stotram',
+    sanskritName: 'आदित्य हृदय स्तोत्रम्',
+    description: 'A dynamic hymn addressed to the Sun God, recited by Sage Agastya to Lord Rama before the battle.',
+    colorPreset: 'saffron',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1
+  },
+  // ── Mantras ──────────────────────────────────────────────────────────────
+  {
+    id: 'navarna_mantra',
+    name: 'Navarna Mantra',
+    sanskritName: 'नवार्ण मंत्र',
+    description: 'A transformative, rhythmic cosmic chant (Aim Hreem Kleem...) to balance inner spiritual forces.',
+    colorPreset: 'purple',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
+    id: 'gayatri_mantra',
+    name: 'Gayatri Mantra',
+    sanskritName: 'गायत्री मंत्र',
+    description: 'A highly revered Vedic chant invoking solar consciousness, wisdom, and spiritual illumination.',
+    colorPreset: 'saffron',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
+    id: 'maha_mrityunjaya',
+    name: 'Maha Mrityunjaya Mantra',
+    sanskritName: 'महामृत्युंजय मंत्र',
+    description: 'A powerful life-restoring mantra of Lord Shiva, invoking rejuvenation, protection, and liberation.',
+    colorPreset: 'purple',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
+    id: 'shiva_panchakshari',
+    name: 'Shiva Panchakshari Mantra',
+    sanskritName: 'शिव पंचाक्षरी मंत्र',
+    description: 'The sacred five-syllable chant "Om Namah Shivaya" expressing devotion, purity, and surrender to Shiva.',
+    colorPreset: 'blue',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
+    id: 'hare_krishna_mahama',
+    name: 'Hare Krishna Mahamantra',
+    sanskritName: 'हरे कृष्ण महामंत्र',
+    description: 'A 16-word vaishnava mahamantra dedicated to Lord Krishna and Lord Rama, fostering divine love and joy.',
+    colorPreset: 'saffron',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
+    id: 'om_namo_bhagavate',
+    name: 'Om Namo Bhagavate Vasudevaya',
+    sanskritName: 'ॐ नमो भगवते वासुदेवाय',
+    description: 'Twelve-syllable liberation mantra dedicated to Lord Vishnu, fostering inner devotion and surrender.',
+    colorPreset: 'blue',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
+    id: 'ganesh_mantra',
+    name: 'Ganesh Maha Mantra',
+    sanskritName: 'गणेश महामंत्र',
+    description: 'Obstacle-removing mantra "Om Gam Ganapataye Namaha" invoking auspicious beginnings and success.',
+    colorPreset: 'saffron',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
+    id: 'durga_mantra',
+    name: 'Durga Mantra (Om Dum Durgayei)',
+    sanskritName: 'दुर्गा मंत्र (ॐ दुं दुर्गायै नमः)',
+    description: 'Devotional protective mantra invoking the armor and victory of Goddess Durga.',
+    colorPreset: 'crimson',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
   }
 ];
 
@@ -155,7 +300,15 @@ export const loadStore = (): SadhanaStore => {
     if (data) {
       const parsed = JSON.parse(data);
       // Ensure we have arrays
-      if (!parsed.sadhanas || parsed.sadhanas.length === 0) parsed.sadhanas = DEFAULT_SADHANA_LIST;
+      if (!parsed.sadhanas || parsed.sadhanas.length === 0) {
+        parsed.sadhanas = DEFAULT_SADHANA_LIST;
+      } else {
+        const existingIds = new Set(parsed.sadhanas.map((s: any) => s.id));
+        const missingDefaults = DEFAULT_SADHANA_LIST.filter(d => !existingIds.has(d.id));
+        if (missingDefaults.length > 0) {
+          parsed.sadhanas = [...parsed.sadhanas, ...missingDefaults];
+        }
+      }
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
       // Run one-time migration to raw reps
