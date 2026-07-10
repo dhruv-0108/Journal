@@ -30,64 +30,8 @@ export const formatSadhanaCount = (count: number, config?: SadhanaConfig): strin
 };
 
 // Default presets
-// Default presets for the frontend (reverted to original minimal 5)
-export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
-  {
-    id: 'hanuman_chalisa',
-    name: 'Hanuman Chalisa',
-    sanskritName: 'हनुमान चालीसा',
-    description: 'Devotional hymn dedicated to Lord Hanuman, invoking physical/mental strength and courage.',
-    colorPreset: 'saffron',
-    hasCount: true,
-    countType: 'reps',
-    countUnit: 'Times Recited',
-    defaultCount: 1
-  },
-  {
-    id: 'sidhkunjika_stotra',
-    name: 'Sidh Kunjika Stotra',
-    sanskritName: 'सिद्ध कुंजिका स्तोत्र',
-    description: 'A powerful, foundational stotra from the Durga Saptashati, representing shakti and spiritual protection.',
-    colorPreset: 'crimson',
-    hasCount: true,
-    countType: 'reps',
-    countUnit: 'Times Recited',
-    defaultCount: 1
-  },
-  {
-    id: 'navarna_mantra',
-    name: 'Navarna Mantra',
-    sanskritName: 'नवार्ण मंत्र',
-    description: 'A transformative, rhythmic cosmic chant (Aim Hreem Kleem...) to balance inner spiritual forces.',
-    colorPreset: 'purple',
-    hasCount: true,
-    countType: 'mala',
-    countUnit: 'Reps',
-    defaultCount: 108
-  },
-  {
-    id: 'deviatharvashirsha',
-    name: 'Devi Atharvashirsha',
-    sanskritName: 'देवी अथर्वशीर्ष',
-    description: 'Vedic text praising the Divine Mother as the absolute source of creation.',
-    colorPreset: 'blue',
-    hasCount: true,
-    countType: 'reps',
-    countUnit: 'Times Recited',
-    defaultCount: 1
-  },
-  {
-    id: 'sri_suktam',
-    name: 'Sri Suktam',
-    sanskritName: 'श्री सूक्तम्',
-    description: 'Rigvedic hymn invoking Divine Grace, inner light, abundance, and spiritual prosperity.',
-    colorPreset: 'emerald',
-    hasCount: true,
-    countType: 'reps',
-    countUnit: 'Times Recited',
-    defaultCount: 1
-  }
-];
+// Default presets for the frontend (empty, as users create their own)
+export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [];
 
 export interface MasterSadhanaEntry extends SadhanaConfig {
   category: 'stotra' | 'chalisa' | 'mantra' | '108 names' | '12 names' | '1008 names';
@@ -349,9 +293,8 @@ const migrateStoreToReps = (store: SadhanaStore): SadhanaStore => {
       .map(s => s.id)
   );
 
-  // Also ensure preset sadhanas get countType if missing
   const migratedSadhanas = store.sadhanas.map(s => {
-    const preset = DEFAULT_SADHANA_LIST.find(d => d.id === s.id);
+    const preset = MASTER_SADHANA_DATABASE.find(d => d.id === s.id);
     if (preset && !s.countType) {
       return { ...s, countType: preset.countType };
     }
@@ -398,8 +341,8 @@ export const loadStore = (): SadhanaStore => {
     const data = localStorage.getItem(STORE_LOCAL_STORAGE_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      // Ensure we have arrays
-      if (!parsed.sadhanas || parsed.sadhanas.length === 0) parsed.sadhanas = DEFAULT_SADHANA_LIST;
+      if (!parsed.sadhanas) parsed.sadhanas = [];
+      parsed.sadhanas = parsed.sadhanas.filter((s: any) => s.id.startsWith('sadhana_'));
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
       // Run one-time migration to raw reps

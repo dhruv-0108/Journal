@@ -33,8 +33,8 @@ export const mergeStores = (local: SadhanaStore, cloud: SadhanaStore): SadhanaSt
   
   // Merge custom sadhanas
   const sadhanaMap = new Map();
-  local.sadhanas.forEach(s => sadhanaMap.set(s.id, s));
-  cloud.sadhanas.forEach(s => sadhanaMap.set(s.id, s));
+  local.sadhanas.filter(s => s.id.startsWith('sadhana_')).forEach(s => sadhanaMap.set(s.id, s));
+  cloud.sadhanas.filter(s => s.id.startsWith('sadhana_')).forEach(s => sadhanaMap.set(s.id, s));
   
   // Merge active sankalps
   const sankalpMap = new Map();
