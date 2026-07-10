@@ -1,13 +1,20 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, X, Calendar, Sparkles, Trash2, Target } from 'lucide-react';
 import type { Sankalp, SadhanaConfig, SadhanaLogs } from '../types';
-import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount, getOffsetDateString, MASTER_SADHANA_DATABASE } from '../sadhanaUtils';
+import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount, getOffsetDateString } from '../sadhanaUtils';
 
 interface SankalpManagerProps {
   sankalps: Sankalp[];
   sadhanas: SadhanaConfig[];
   logs: SadhanaLogs;
-  onAdd: (sankalp: Sankalp) => void;
+  onAdd: (sankalpData: {
+    title: string;
+    practiceName: string;
+    practiceType: 'stotra' | 'mantra';
+    targetCount: number;
+    durationDays: number;
+    startDate: string;
+  }) => void;
   onUpdateStatus: (id: string, status: 'completed' | 'abandoned') => void;
   onDelete: (id: string) => void;
 }
@@ -19,24 +26,12 @@ type CalcSub    = 'calc-days' | 'calc-daily';
 export const SankalpManager: React.FC<SankalpManagerProps> = ({
   sankalps, sadhanas, logs, onAdd, onUpdateStatus, onDelete
 }) => {
-  const dropdownSadhanas = useMemo(() => {
-    return sadhanas.length > 0 ? sadhanas : MASTER_SADHANA_DATABASE;
-  }, [sadhanas]);
-
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // ── Core fields ──────────────────────────────────────────────────────────
   const [title, setTitle]       = useState('');
-  const [sadhanaId, setSadhanaId] = useState(() => dropdownSadhanas[0]?.id || '');
   const [startDate, setStartDate] = useState(formatDateString(new Date()));
   const [practiceType, setPracticeType] = useState<'stotra' | 'mantra'>('stotra');
-
-  useEffect(() => {
-    if (!sadhanaId && dropdownSadhanas[0]?.id) {
-      setSadhanaId(dropdownSadhanas[0].id);
-      setPracticeType(dropdownSadhanas[0].countType === 'mala' ? 'mantra' : 'stotra');
-    }
-  }, [dropdownSadhanas, sadhanaId]);
 
   // ── Goal (Step 2) ────────────────────────────────────────────────────────
   const [goalStr,  setGoalStr]  = useState('');          // raw string the user types
@@ -49,9 +44,8 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   const [modeBDaysStr, setModeBDaysStr] = useState('41'); // duration for calc-daily
 
   // ── Derived: selected sadhana metadata ───────────────────────────────────
-  const selectedSadhana = dropdownSadhanas.find(s => s.id === sadhanaId);
   const isMalaType      = practiceType === 'mantra';
-  const repUnit         = isMalaType ? 'Reps' : (selectedSadhana?.countUnit || 'Times');
+  const repUnit         = isMalaType ? 'Reps' : 'Times';
 
   // ── Derived: goal in both units ───────────────────────────────────────────
   const goalVal = parseInt(goalStr, 10) || 0;
@@ -102,31 +96,17 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   // ── Reset form ────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
     setTitle(''); setGoalStr(''); setGoalUnit('mala');
-    const defaultSadhana = dropdownSadhanas[0];
-    if (defaultSadhana) {
-      setSadhanaId(defaultSadhana.id);
-      setPracticeType(defaultSadhana.countType === 'mala' ? 'mantra' : 'stotra');
-    }
+    setPracticeType('stotra');
     setStartDate(formatDateString(new Date()));
     setCalcSub('calc-days');
     setCapacityStr(''); setCapUnit('mala'); setModeBDaysStr('41');
     setIsFormOpen(true);
   };
 
-  const handleSadhanaChange = (id: string) => {
-    setSadhanaId(id);
-    const config = dropdownSadhanas.find(s => s.id === id);
-    if (config) {
-      setPracticeType(config.countType === 'mala' ? 'mantra' : 'stotra');
-    }
-    setGoalStr('');
-    setCapacityStr('');
-  };
-
   // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !sadhanaId || goalVal <= 0) return;
+    if (!title.trim() || goalVal <= 0) return;
 
     let finalDailyMalas = 0;   // malas/day (for mala-type) OR reps/day (for reps-type)
     let finalDuration   = 0;
@@ -148,19 +128,18 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     const rawTargetCount = isMalaType ? finalDailyMalas * MALA_REPS : finalDailyMalas;
 
     onAdd({
-      id: `sankalp_${Date.now()}`,
       title: title.trim(),
-      sadhanaId,
+      practiceName: title.trim(),
+      practiceType,
       targetCount: rawTargetCount,
       durationDays: finalDuration,
-      startDate,
-      status: 'active'
+      startDate
     });
     setIsFormOpen(false);
   };
 
-  const getSadhanaName   = (id: string) => dropdownSadhanas.find(s => s.id === id)?.name ?? 'Unknown Practice';
-  const getSadhanaConfig = (id: string): SadhanaConfig | undefined => dropdownSadhanas.find(s => s.id === id);
+  const getSadhanaName   = (id: string) => sadhanas.find(s => s.id === id)?.name ?? 'Unknown Practice';
+  const getSadhanaConfig = (id: string): SadhanaConfig | undefined => sadhanas.find(s => s.id === id);
 
   const activeSankalps    = sankalps.filter(s => s.status === 'active');
   const completedSankalps = sankalps.filter(s => s.status !== 'active');
@@ -217,8 +196,6 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
           <button
             onClick={handleOpenAdd}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
-            disabled={dropdownSadhanas.length === 0}
-            style={{ opacity: dropdownSadhanas.length === 0 ? 0.5 : 1 }}
           >
             <Plus className="w-4 h-4" />
             Resolve New Vow
@@ -244,29 +221,15 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="col-span-1 md:col-span-2">
-              <label className={labelCls}>Vow Title</label>
+              <label className={labelCls}>Vow Title / Sadhana Name</label>
               <input
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="e.g. 41-Day Durga Sadhana, Daily Gayatri Vow"
+                placeholder="e.g. 41-Day Surya Upasna, Hanuman Chalisa Vow"
                 required
                 className={`${inputCls} font-sans`}
               />
-            </div>
-            <div>
-              <label className={labelCls}>Select Practice</label>
-              <select
-                value={sadhanaId}
-                onChange={e => handleSadhanaChange(e.target.value)}
-                className={inputCls}
-              >
-                {dropdownSadhanas.map(s => (
-                  <option key={s.id} value={s.id} className="bg-sadhana-dark text-white">
-                    {s.name} {s.sanskritName ? `(${s.sanskritName})` : ''}
-                  </option>
-                ))}
-              </select>
             </div>
             <div>
               <label className={labelCls}>Practice Type</label>
@@ -295,7 +258,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                 </button>
               </div>
             </div>
-            <div className="col-span-1 md:col-span-2">
+            <div>
               <label className={labelCls}>Start Date</label>
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
                 required className={inputCls} />

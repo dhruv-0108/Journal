@@ -181,16 +181,61 @@ function App() {
     return store.sankalps.some(s => s.sadhanaId === sadhanaId);
   };
 
-  // Sankalp Handlers
-  const handleAddSankalp = (newSankalp: Sankalp) => {
+  const handleAddSankalp = (sankalpData: {
+    title: string;
+    practiceName: string;
+    practiceType: 'stotra' | 'mantra';
+    targetCount: number;
+    durationDays: number;
+    startDate: string;
+  }) => {
     if (!currentUser) {
       setShowGuestGate(true);
       return;
     }
-    updateStore(prev => ({
-      ...prev,
-      sankalps: [...prev.sankalps, newSankalp]
-    }));
+
+    updateStore(prev => {
+      // Find or create the sadhana practice config
+      let existingSadhana = prev.sadhanas.find(
+        s => s.name.toLowerCase().trim() === sankalpData.practiceName.toLowerCase().trim() && 
+             s.countType === (sankalpData.practiceType === 'mantra' ? 'mala' : 'reps')
+      );
+
+      let sadhanaId = '';
+      let updatedSadhanas = [...prev.sadhanas];
+
+      if (existingSadhana) {
+        sadhanaId = existingSadhana.id;
+      } else {
+        sadhanaId = `sadhana_${Date.now()}`;
+        const newSadhana: SadhanaConfig = {
+          id: sadhanaId,
+          name: sankalpData.practiceName.trim(),
+          colorPreset: sankalpData.practiceType === 'mantra' ? 'purple' : 'saffron',
+          hasCount: true,
+          countType: sankalpData.practiceType === 'mantra' ? 'mala' : 'reps',
+          countUnit: sankalpData.practiceType === 'mantra' ? 'Reps' : 'Times Recited',
+          defaultCount: sankalpData.practiceType === 'mantra' ? 108 : 1
+        };
+        updatedSadhanas.push(newSadhana);
+      }
+
+      const newSankalp: Sankalp = {
+        id: `sankalp_${Date.now()}`,
+        title: sankalpData.title.trim(),
+        sadhanaId,
+        targetCount: sankalpData.targetCount,
+        durationDays: sankalpData.durationDays,
+        startDate: sankalpData.startDate,
+        status: 'active'
+      };
+
+      return {
+        ...prev,
+        sadhanas: updatedSadhanas,
+        sankalps: [...prev.sankalps, newSankalp]
+      };
+    });
   };
 
   const handleUpdateSankalpStatus = (id: string, status: 'completed' | 'abandoned') => {
