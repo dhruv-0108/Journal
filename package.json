@@ -10,11 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@rolldown/binding-darwin-arm64": "^1.1.5",
     "firebase": "^12.16.0",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-darwin-arm64": "^1.1.5"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
