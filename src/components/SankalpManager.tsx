@@ -40,8 +40,8 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   const [durationPreset, setDurationPreset] = useState<'11' | '21' | '41' | '108' | 'custom'>('41');
   const [customDuration, setCustomDuration] = useState(40);
 
-  // ── Mode B: "I know my total & capacity" fields ───────────────────────────
-  // totalCountStr: total count they want to complete over the whole vow
+  // ── Mode B: "Calculate for me" fields ────────────────────────────────────
+  // totalCountStr: total REPETITIONS the user wants to complete (we convert to malas internally)
   // capacityStr: how many malas/reps they can do per day
   const [totalCountStr, setTotalCountStr] = useState('');
   const [capacityStr, setCapacityStr] = useState('');
@@ -58,25 +58,28 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   const modeADailyTarget = parseInt(dailyTargetStr, 10) || 0;
   const modeADuration = durationPreset === 'custom' ? customDuration : parseInt(durationPreset, 10);
 
-  const modeBTotal = parseInt(totalCountStr, 10) || 0;
+  // Mode B: user enters REPETITIONS — we derive malas from that
+  const modeBTotalReps = parseInt(totalCountStr, 10) || 0;
+  // For mala-type: convert reps → malas (ceiling). For reps-type: use raw value.
+  const modeBTotalMalas = isMalaType ? Math.ceil(modeBTotalReps / MALA_REPS) : modeBTotalReps;
   const modeBCapacity = parseInt(capacityStr, 10) || 0;
   const modeBDays = parseInt(modeBDaysStr, 10) || 0;
 
-  // Mode B calc-days: given total + daily capacity → how many days?
+  // Mode B calc-days: given total malas + daily capacity (malas/day) → how many days?
   const calcDaysNeeded = useMemo(() => {
-    if (modeBTotal > 0 && modeBCapacity > 0) {
-      return Math.ceil(modeBTotal / modeBCapacity);
+    if (modeBTotalMalas > 0 && modeBCapacity > 0) {
+      return Math.ceil(modeBTotalMalas / modeBCapacity);
     }
     return null;
-  }, [modeBTotal, modeBCapacity]);
+  }, [modeBTotalMalas, modeBCapacity]);
 
-  // Mode B calc-daily: given total + days → what daily target?
+  // Mode B calc-daily: given total malas + days → what daily target (malas/day)?
   const calcDailyNeeded = useMemo(() => {
-    if (modeBTotal > 0 && modeBDays > 0) {
-      return Math.ceil(modeBTotal / modeBDays);
+    if (modeBTotalMalas > 0 && modeBDays > 0) {
+      return Math.ceil(modeBTotalMalas / modeBDays);
     }
     return null;
-  }, [modeBTotal, modeBDays]);
+  }, [modeBTotalMalas, modeBDays]);
 
   const handleOpenAdd = () => {
     setTitle('');
@@ -104,14 +107,14 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
       finalDailyTarget = modeADailyTarget;
       finalDuration = modeADuration;
     } else {
-      // Planning mode B
+      // Planning mode B — finalDailyTarget is in malas (for mala-type) or reps
       if (modeB === 'calc-days') {
         if (!calcDaysNeeded || modeBCapacity <= 0) return;
-        finalDailyTarget = modeBCapacity;
+        finalDailyTarget = modeBCapacity;   // user's stated daily capacity (malas/day)
         finalDuration = calcDaysNeeded;
       } else {
         if (!calcDailyNeeded || modeBDays <= 0) return;
-        finalDailyTarget = calcDailyNeeded;
+        finalDailyTarget = calcDailyNeeded; // calculated malas/day required
         finalDuration = modeBDays;
       }
     }
@@ -373,33 +376,42 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Total count goal (shared) */}
+                {/* Total repetitions goal (shared) */}
                 <div className="space-y-1.5 col-span-1 md:col-span-2">
                   <label className={labelCls}>
-                    Total {unitLabel} I Want to Complete (across entire vow)
+                    Total Repetitions I Want to Complete
+                    {isMalaType && <span className="text-purple-300"> — we'll convert to Malas for you</span>}
                   </label>
                   <input
                     type="number"
                     min={1}
                     value={totalCountStr}
                     onChange={e => setTotalCountStr(e.target.value)}
-                    placeholder={isMalaType ? 'e.g. 1000 Malas' : 'e.g. 100'}
+                    placeholder={isMalaType ? 'e.g. 100000 repetitions' : 'e.g. 100'}
                     required
                     className={inputCls}
                   />
-                  {isMalaType && modeBTotal > 0 && (
-                    <div className="text-[10px] text-slate-500">
-                      = <span className="text-white font-semibold">{(modeBTotal * MALA_REPS).toLocaleString()}</span> raw repetitions total
+                  {isMalaType && modeBTotalReps > 0 && (
+                    <div className="flex items-center gap-2 mt-1.5 px-2.5 py-1.5 rounded-lg bg-purple-600/[0.08] border border-purple-500/20">
+                      <span className="text-[10px] text-slate-400">
+                        <span className="text-purple-300 font-bold">{modeBTotalReps.toLocaleString()}</span> reps
+                        {' '}={' '}
+                        <span className="text-white font-bold">{modeBTotalMalas.toLocaleString()}</span> Mala{modeBTotalMalas !== 1 ? 's' : ''}
+                        {' '}(1 Mala = {MALA_REPS} reps)
+                      </span>
                     </div>
                   )}
                 </div>
 
-                {/* Mode B - calc-days: enter daily capacity */}
+                {/* Mode B - calc-days: enter daily capacity in malas */}
                 {modeB === 'calc-days' && (
                   <div className="space-y-1.5 col-span-1 md:col-span-2">
                     <label className={labelCls}>
-                      My Daily Capacity ({unitLabel}/day)
-                      {isMalaType && <span className="text-purple-300"> — how many Malas can you do each day?</span>}
+                      My Daily Capacity
+                      {isMalaType
+                        ? <span className="text-purple-300"> (Malas/day — how many Malas can you sit for each day?)</span>
+                        : <span> ({unitLabel}/day)</span>
+                      }
                     </label>
                     <input
                       type="number"
@@ -410,6 +422,11 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       required
                       className={inputCls}
                     />
+                    {isMalaType && modeBCapacity > 0 && (
+                      <div className="text-[10px] text-slate-500">
+                        = <span className="text-white font-semibold">{(modeBCapacity * MALA_REPS).toLocaleString()}</span> repetitions per day
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -445,10 +462,10 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
               </div>
 
               {/* ── Result panel ─────────────────────────────────────────── */}
-              {modeB === 'calc-days' && modeBTotal > 0 && modeBCapacity > 0 && calcDaysNeeded && (
-                <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-2">
+              {modeB === 'calc-days' && modeBTotalReps > 0 && modeBCapacity > 0 && calcDaysNeeded && (
+                <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-3">
                   <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold">Your Personalised Plan</p>
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-4 items-start">
                     <div className="text-center">
                       <p className="text-2xl font-bold text-white font-mono">{calcDaysNeeded}</p>
                       <p className="text-[10px] text-slate-400">Days Required</p>
@@ -456,30 +473,48 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                     <div className="w-px bg-white/10 self-stretch" />
                     <div className="text-center">
                       <p className="text-2xl font-bold text-purple-300 font-mono">{modeBCapacity}</p>
-                      <p className="text-[10px] text-slate-400">{unitLabel}/day</p>
+                      <p className="text-[10px] text-slate-400">Malas / day</p>
+                      {isMalaType && (
+                        <p className="text-[9px] text-slate-600 font-mono mt-0.5">{(modeBCapacity * MALA_REPS).toLocaleString()} reps/day</p>
+                      )}
                     </div>
                     <div className="w-px bg-white/10 self-stretch" />
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-sadhana-gold font-mono">{modeBTotal.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-400">Total {unitLabel}</p>
+                      <p className="text-2xl font-bold text-sadhana-gold font-mono">{modeBTotalMalas.toLocaleString()}</p>
+                      <p className="text-[10px] text-slate-400">Total Malas</p>
+                      {isMalaType && (
+                        <p className="text-[9px] text-slate-600 font-mono mt-0.5">{modeBTotalReps.toLocaleString()} reps</p>
+                      )}
                     </div>
                   </div>
                   {isMalaType && (
-                    <p className="text-[10px] text-slate-500 pt-1 border-t border-white/5">
-                      {modeBCapacity} Mala × {calcDaysNeeded} days = {(modeBCapacity * calcDaysNeeded).toLocaleString()} Malas completed
-                      {' '}({((modeBCapacity * calcDaysNeeded) * MALA_REPS).toLocaleString()} repetitions)
-                    </p>
+                    <div className="pt-2 border-t border-white/5 space-y-1">
+                      <p className="text-[10px] text-slate-400">
+                        <span className="text-purple-300 font-semibold">{modeBCapacity} Mala/day</span>
+                        {' '}×{' '}
+                        <span className="text-white font-semibold">{calcDaysNeeded} days</span>
+                        {' '}={' '}
+                        <span className="text-sadhana-gold font-semibold">{(modeBCapacity * calcDaysNeeded).toLocaleString()} Malas</span>
+                        {' '}completed
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        = <span className="text-white font-semibold">{((modeBCapacity * calcDaysNeeded) * MALA_REPS).toLocaleString()}</span> total repetitions
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
 
-              {modeB === 'calc-daily' && modeBTotal > 0 && modeBDays > 0 && calcDailyNeeded && (
-                <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-2">
+              {modeB === 'calc-daily' && modeBTotalReps > 0 && modeBDays > 0 && calcDailyNeeded && (
+                <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-3">
                   <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold">Your Personalised Plan</p>
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-4 items-start">
                     <div className="text-center">
                       <p className="text-2xl font-bold text-purple-300 font-mono">{calcDailyNeeded}</p>
-                      <p className="text-[10px] text-slate-400">{unitLabel}/day needed</p>
+                      <p className="text-[10px] text-slate-400">Malas / day</p>
+                      {isMalaType && (
+                        <p className="text-[9px] text-slate-600 font-mono mt-0.5">{(calcDailyNeeded * MALA_REPS).toLocaleString()} reps/day</p>
+                      )}
                     </div>
                     <div className="w-px bg-white/10 self-stretch" />
                     <div className="text-center">
@@ -488,21 +523,32 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                     </div>
                     <div className="w-px bg-white/10 self-stretch" />
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-sadhana-gold font-mono">{modeBTotal.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-400">Total {unitLabel}</p>
+                      <p className="text-2xl font-bold text-sadhana-gold font-mono">{modeBTotalMalas.toLocaleString()}</p>
+                      <p className="text-[10px] text-slate-400">Total Malas</p>
+                      {isMalaType && (
+                        <p className="text-[9px] text-slate-600 font-mono mt-0.5">{modeBTotalReps.toLocaleString()} reps</p>
+                      )}
                     </div>
                   </div>
                   {isMalaType && (
-                    <p className="text-[10px] text-slate-500 pt-1 border-t border-white/5">
-                      {calcDailyNeeded} Mala/day × {modeBDays} days = {(calcDailyNeeded * modeBDays).toLocaleString()} Malas
-                      {' '}({((calcDailyNeeded * modeBDays) * MALA_REPS).toLocaleString()} repetitions)
-                    </p>
+                    <div className="pt-2 border-t border-white/5 space-y-1">
+                      <p className="text-[10px] text-slate-400">
+                        <span className="text-purple-300 font-semibold">{calcDailyNeeded} Mala/day</span>
+                        {' '}×{' '}
+                        <span className="text-white font-semibold">{modeBDays} days</span>
+                        {' '}={' '}
+                        <span className="text-sadhana-gold font-semibold">{(calcDailyNeeded * modeBDays).toLocaleString()} Malas</span>
+                      </p>
+                      <p className="text-[10px] text-slate-500">
+                        = <span className="text-white font-semibold">{((calcDailyNeeded * modeBDays) * MALA_REPS).toLocaleString()}</span> total repetitions
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
 
               {/* Validation hints */}
-              {modeB === 'calc-days' && modeBTotal > 0 && modeBCapacity > 0 && !calcDaysNeeded && (
+              {modeB === 'calc-days' && modeBTotalReps > 0 && modeBCapacity > 0 && !calcDaysNeeded && (
                 <p className="text-xs text-rose-400">Please enter valid values above.</p>
               )}
             </div>
