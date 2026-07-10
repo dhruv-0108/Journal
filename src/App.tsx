@@ -122,7 +122,7 @@ function App() {
 
   // Sign out handler
   const handleSignOut = async () => {
-    if (confirm('Are you sure you want to sign out? Your logs will remain saved locally on this browser.')) {
+    if (confirm('Are you sure you want to sign out? Your data is securely saved in the cloud and will also remain on this device.')) {
       await signOut(auth);
     }
   };
