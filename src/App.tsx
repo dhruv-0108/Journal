@@ -4,9 +4,10 @@ import { Stats } from './components/Stats';
 import { SadhanaModal } from './components/SadhanaModal';
 import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
+import { PracticeStats } from './components/PracticeStats';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
 import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST } from './sadhanaUtils';
-import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut } from 'lucide-react';
+import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3 } from 'lucide-react';
 
 // Firebase imports
 import { auth } from './firebase';
@@ -15,7 +16,7 @@ import type { User } from 'firebase/auth';
 import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores } from './firebaseUtils';
 import { AuthPage } from './components/AuthPage';
 
-type TabId = 'dashboard' | 'vows' | 'settings';
+type TabId = 'dashboard' | 'vows' | 'practices' | 'settings';
 
 
 function App() {
@@ -393,6 +394,20 @@ function App() {
           </button>
           
           <button
+            onClick={() => setActiveTab('practices')}
+            className={`
+              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              ${activeTab === 'practices'
+                ? 'bg-sadhana-gold text-black shadow'
+                : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
+              }
+            `}
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            Practices
+          </button>
+          
+          <button
             onClick={() => setActiveTab('settings')}
             className={`
               flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
@@ -454,6 +469,7 @@ function App() {
             <h2 className="text-xs font-sans font-bold text-slate-400 uppercase tracking-widest">
               {activeTab === 'dashboard' && 'Dashboard Overview'}
               {activeTab === 'vows' && 'Vows & Resolutions'}
+              {activeTab === 'practices' && 'Practice Insights'}
               {activeTab === 'settings' && 'Practice Settings'}
             </h2>
             <p className="text-[10px] text-slate-500 font-serif italic mt-0.5">"{greeting}"</p>
@@ -495,6 +511,17 @@ function App() {
               onAdd={handleAddSankalp}
               onUpdateStatus={handleUpdateSankalpStatus}
               onDelete={handleDeleteSankalp}
+            />
+          </div>
+        )}
+
+        {/* Tab 3: Practice Stats */}
+        {activeTab === 'practices' && (
+          <div className="animate-fade-in">
+            <PracticeStats
+              sadhanas={displaySadhanas}
+              logs={store.logs}
+              sankalps={store.sankalps}
             />
           </div>
         )}
