@@ -37,6 +37,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
   const [hasCount, setHasCount] = useState(true);
   const [countType, setCountType] = useState<SadhanaCountType>('reps');
   const [countUnit, setCountUnit] = useState('Times Recited');
+  const [performDaily, setPerformDaily] = useState(true);
 
   const resetForm = () => {
     setName('');
@@ -46,6 +47,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
     setHasCount(true);
     setCountType('reps');
     setCountUnit('Times Recited');
+    setPerformDaily(true);
     setEditingId(null);
     setIsFormOpen(false);
   };
@@ -64,6 +66,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
     setHasCount(s.hasCount);
     setCountType(s.countType || 'reps');
     setCountUnit(s.countUnit || 'Times Recited');
+    setPerformDaily(s.performDaily ?? false);
     setIsFormOpen(true);
   };
 
@@ -80,7 +83,8 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
       hasCount,
       countType: hasCount ? countType : undefined,
       countUnit: (hasCount && countType === 'reps') ? (countUnit.trim() || 'Times Recited') : undefined,
-      defaultCount: hasCount ? (countType === 'mala' ? MALA_REPS : 1) : undefined
+      defaultCount: hasCount ? (countType === 'mala' ? MALA_REPS : 1) : undefined,
+      performDaily
     };
 
     if (editingId) {
@@ -270,6 +274,29 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
             </div>
           )}
 
+          {/* Perform Daily Option */}
+          <div className="border-t border-white/5 pt-3">
+            <button
+              type="button"
+              onClick={() => setPerformDaily(!performDaily)}
+              className="flex items-center gap-3 text-left py-2"
+            >
+              <div className={`
+                w-5 h-5 rounded border flex items-center justify-center transition-all
+                ${performDaily 
+                  ? 'bg-sadhana-gold border-sadhana-gold text-black shadow-[0_0_8px_rgba(245,158,11,0.2)]' 
+                  : 'border-white/20 text-transparent'
+                }
+              `}>
+                <Check className="w-3.5 h-3.5 stroke-[3px]" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-white">Perform Daily (Always on Calendar)</div>
+                <p className="text-[10px] text-slate-500">Show this practice in the daily journal on all calendar dates, even outside vow ranges.</p>
+              </div>
+            </button>
+          </div>
+
           {/* Color Preset Selector */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-400 block">Psychology & Visual Color Preset</label>
@@ -352,19 +379,27 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
                   />
                 </div>
 
-                {s.hasCount && (
-                  <span className="inline-block mt-3 text-[10px] px-2 py-0.5 rounded font-mono">
-                    {s.countType === 'mala' ? (
-                      <span className="bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">
-                        🙿 Mala Chanting (1 Mala = 108 Reps)
-                      </span>
-                    ) : (
-                      <span className="bg-white/[0.04] text-slate-400">
-                        Unit: {s.countUnit || 'Reps'}
-                      </span>
-                    )}
-                  </span>
-                )}
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {s.hasCount && (
+                    <span className="inline-block text-[10px] rounded font-mono">
+                      {s.countType === 'mala' ? (
+                        <span className="bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">
+                          🙿 Mala Chanting
+                        </span>
+                      ) : (
+                        <span className="bg-white/[0.04] text-slate-400 border border-white/5 px-2 py-0.5 rounded">
+                          Unit: {s.countUnit || 'Reps'}
+                        </span>
+                      )}
+                    </span>
+                  )}
+
+                  {s.performDaily && (
+                    <span className="inline-block text-[10px] bg-sadhana-gold/10 text-sadhana-gold border border-sadhana-gold/25 px-2 py-0.5 rounded font-sans font-semibold">
+                      Daily Practice
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}

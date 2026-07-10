@@ -56,21 +56,31 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
   // Filter sadhanas that should be shown on this specific day
   const visibleSadhanas = useMemo(() => {
     return sadhanas.filter(s => {
+      // 1. If it was already logged on this day in the past, always show it so they can view/edit
+      if (log?.completed[s.id] || (log?.counts[s.id] !== undefined)) {
+        return true;
+      }
+
+      // 2. If it is marked as performDaily, always show it daily
+      if (s.performDaily) {
+        return true;
+      }
+
       // Find all vows associated with this practice
       const associatedVows = sankalps.filter(v => v.sadhanaId === s.id);
       
-      // If a practice is not associated with any vow, it is a permanent daily practice: always show it!
+      // 3. If a practice is not associated with any vow, it is a daily practice by default: show daily
       if (associatedVows.length === 0) {
         return true;
       }
       
-      // If associated with a vow, check if the clicked date falls within at least one of those vows' active ranges
+      // 4. If associated with a vow, check if the clicked date falls within at least one of those vows' active ranges
       return associatedVows.some(v => {
         const endDateStr = getOffsetDateString(v.startDate, v.durationDays - 1);
         return dateKey >= v.startDate && dateKey <= endDateStr;
       });
     });
-  }, [sadhanas, sankalps, dateKey]);
+  }, [sadhanas, sankalps, dateKey, log]);
 
   // Local state for editing (dynamic keys)
   const [completed, setCompleted] = useState<Record<string, boolean>>({});

@@ -18,6 +18,7 @@ export interface SadhanaConfig {
   countType?: SadhanaCountType;    // 'reps' (default) or 'mala' (1 Mala = 108 reps)
   countUnit?: string;              // E.g. 'Times Recited', 'Minutes' (used for 'reps' type)
   defaultCount?: number;           // In raw reps (for mala: multiples of 108)
+  performDaily?: boolean;          // If true, always show on calendar daily
 }
 
 export interface SadhanaDayLog {
