@@ -30,8 +30,8 @@ export const formatSadhanaCount = (count: number, config?: SadhanaConfig): strin
 };
 
 // Default presets
+// Default presets for the frontend (reverted to original minimal 5)
 export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
-  // ── Stotras ──────────────────────────────────────────────────────────────
   {
     id: 'hanuman_chalisa',
     name: 'Hanuman Chalisa',
@@ -55,6 +55,17 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     defaultCount: 1
   },
   {
+    id: 'navarna_mantra',
+    name: 'Navarna Mantra',
+    sanskritName: 'नवार्ण मंत्र',
+    description: 'A transformative, rhythmic cosmic chant (Aim Hreem Kleem...) to balance inner spiritual forces.',
+    colorPreset: 'purple',
+    hasCount: true,
+    countType: 'mala',
+    countUnit: 'Reps',
+    defaultCount: 108
+  },
+  {
     id: 'deviatharvashirsha',
     name: 'Devi Atharvashirsha',
     sanskritName: 'देवी अथर्वशीर्ष',
@@ -75,6 +86,67 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     countType: 'reps',
     countUnit: 'Times Recited',
     defaultCount: 1
+  }
+];
+
+export interface MasterSadhanaEntry extends SadhanaConfig {
+  category: 'stotra' | 'chalisa' | 'mantra' | '108 names' | '12 names' | '1008 names';
+  deityType: 'devi' | 'devta';
+}
+
+// Master database structured with category and deityType segregation
+export const MASTER_SADHANA_DATABASE: MasterSadhanaEntry[] = [
+  {
+    id: 'hanuman_chalisa',
+    name: 'Hanuman Chalisa',
+    sanskritName: 'हनुमान चालीसा',
+    description: 'Devotional hymn dedicated to Lord Hanuman, invoking physical/mental strength and courage.',
+    colorPreset: 'saffron',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1,
+    category: 'chalisa',
+    deityType: 'devta'
+  },
+  {
+    id: 'sidhkunjika_stotra',
+    name: 'Sidh Kunjika Stotra',
+    sanskritName: 'सिद्ध कुंजिका स्तोत्र',
+    description: 'A powerful, foundational stotra from the Durga Saptashati, representing shakti and spiritual protection.',
+    colorPreset: 'crimson',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1,
+    category: 'stotra',
+    deityType: 'devi'
+  },
+  {
+    id: 'deviatharvashirsha',
+    name: 'Devi Atharvashirsha',
+    sanskritName: 'देवी अथर्वशीर्ष',
+    description: 'Vedic text praising the Divine Mother as the absolute source of creation.',
+    colorPreset: 'blue',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1,
+    category: 'stotra',
+    deityType: 'devi'
+  },
+  {
+    id: 'sri_suktam',
+    name: 'Sri Suktam',
+    sanskritName: 'श्री सूक्तम्',
+    description: 'Rigvedic hymn invoking Divine Grace, inner light, abundance, and spiritual prosperity.',
+    colorPreset: 'emerald',
+    hasCount: true,
+    countType: 'reps',
+    countUnit: 'Times Recited',
+    defaultCount: 1,
+    category: 'stotra',
+    deityType: 'devi'
   },
   {
     id: 'lalita_sahasranama',
@@ -85,7 +157,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'reps',
     countUnit: 'Times Recited',
-    defaultCount: 1
+    defaultCount: 1,
+    category: '1008 names',
+    deityType: 'devi'
   },
   {
     id: 'vishnu_sahasranama',
@@ -96,7 +170,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'reps',
     countUnit: 'Times Recited',
-    defaultCount: 1
+    defaultCount: 1,
+    category: '1008 names',
+    deityType: 'devta'
   },
   {
     id: 'shiva_tandava',
@@ -107,7 +183,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'reps',
     countUnit: 'Times Recited',
-    defaultCount: 1
+    defaultCount: 1,
+    category: 'stotra',
+    deityType: 'devta'
   },
   {
     id: 'durga_chalisa',
@@ -118,7 +196,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'reps',
     countUnit: 'Times Recited',
-    defaultCount: 1
+    defaultCount: 1,
+    category: 'chalisa',
+    deityType: 'devi'
   },
   {
     id: 'kanakadhara_stotra',
@@ -129,7 +209,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'reps',
     countUnit: 'Times Recited',
-    defaultCount: 1
+    defaultCount: 1,
+    category: 'stotra',
+    deityType: 'devi'
   },
   {
     id: 'aditya_hrudaya',
@@ -140,9 +222,10 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'reps',
     countUnit: 'Times Recited',
-    defaultCount: 1
+    defaultCount: 1,
+    category: 'stotra',
+    deityType: 'devta'
   },
-  // ── Mantras ──────────────────────────────────────────────────────────────
   {
     id: 'navarna_mantra',
     name: 'Navarna Mantra',
@@ -152,7 +235,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devi'
   },
   {
     id: 'gayatri_mantra',
@@ -163,7 +248,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devi'
   },
   {
     id: 'maha_mrityunjaya',
@@ -174,7 +261,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devta'
   },
   {
     id: 'shiva_panchakshari',
@@ -185,7 +274,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devta'
   },
   {
     id: 'hare_krishna_mahama',
@@ -196,7 +287,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devta'
   },
   {
     id: 'om_namo_bhagavate',
@@ -207,7 +300,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devta'
   },
   {
     id: 'ganesh_mantra',
@@ -218,7 +313,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devta'
   },
   {
     id: 'durga_mantra',
@@ -229,7 +326,9 @@ export const DEFAULT_SADHANA_LIST: SadhanaConfig[] = [
     hasCount: true,
     countType: 'mala',
     countUnit: 'Reps',
-    defaultCount: 108
+    defaultCount: 108,
+    category: 'mantra',
+    deityType: 'devi'
   }
 ];
 
@@ -300,15 +399,7 @@ export const loadStore = (): SadhanaStore => {
     if (data) {
       const parsed = JSON.parse(data);
       // Ensure we have arrays
-      if (!parsed.sadhanas || parsed.sadhanas.length === 0) {
-        parsed.sadhanas = DEFAULT_SADHANA_LIST;
-      } else {
-        const existingIds = new Set(parsed.sadhanas.map((s: any) => s.id));
-        const missingDefaults = DEFAULT_SADHANA_LIST.filter(d => !existingIds.has(d.id));
-        if (missingDefaults.length > 0) {
-          parsed.sadhanas = [...parsed.sadhanas, ...missingDefaults];
-        }
-      }
+      if (!parsed.sadhanas || parsed.sadhanas.length === 0) parsed.sadhanas = DEFAULT_SADHANA_LIST;
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
       // Run one-time migration to raw reps

@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { Calendar } from './components/Calendar';
 import { Stats } from './components/Stats';
 import { SadhanaModal } from './components/SadhanaModal';
-import { DataControls } from './components/DataControls';
 import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
-import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp, SadhanaLogs } from './types';
+import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
 import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST } from './sadhanaUtils';
 import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud } from 'lucide-react';
 
@@ -211,28 +210,7 @@ function App() {
     });
   };
 
-  // Data Control Handlers
-  const handleImportStore = (importedLogs: SadhanaLogs) => {
-    updateStore(prev => {
-      const isFullStore = 'sadhanas' in importedLogs && 'logs' in importedLogs;
-      if (isFullStore) {
-        return importedLogs as unknown as SadhanaStore;
-      }
-      return {
-        ...prev,
-        logs: importedLogs
-      };
-    });
-  };
 
-  const handleClearAllStore = () => {
-    setStore({
-      sadhanas: DEFAULT_SADHANA_LIST,
-      sankalps: [],
-      logs: {}
-    });
-    localStorage.removeItem('sadhana_journal_store_v2');
-  };
 
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
@@ -500,14 +478,6 @@ function App() {
 
       </main>
 
-      {/* Data Controls (Backup management) */}
-      <footer>
-        <DataControls 
-          logs={store.logs}
-          onImport={handleImportStore}
-          onClear={handleClearAllStore}
-        />
-      </footer>
 
       {/* Daily Editor Modal */}
       <SadhanaModal 
