@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Flame, Shield, Flower2, Sparkles, Sun, Trash2, Check, Plus, Minus } from 'lucide-react';
 import type { SadhanaDayLog, SadhanaConfig, SadhanaColorPreset, Sankalp } from '../types';
 import { getColorHex, getOffsetDateString, MALA_REPS, formatSadhanaCount } from '../sadhanaUtils';
@@ -52,6 +52,25 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
   };
 
   const dateKey = formatDateKey(date);
+
+  // Filter sadhanas that should be shown on this specific day
+  const visibleSadhanas = useMemo(() => {
+    return sadhanas.filter(s => {
+      // Find all vows associated with this practice
+      const associatedVows = sankalps.filter(v => v.sadhanaId === s.id);
+      
+      // If a practice is not associated with any vow, it is a permanent daily practice: always show it!
+      if (associatedVows.length === 0) {
+        return true;
+      }
+      
+      // If associated with a vow, check if the clicked date falls within at least one of those vows' active ranges
+      return associatedVows.some(v => {
+        const endDateStr = getOffsetDateString(v.startDate, v.durationDays - 1);
+        return dateKey >= v.startDate && dateKey <= endDateStr;
+      });
+    });
+  }, [sadhanas, sankalps, dateKey]);
 
   // Local state for editing (dynamic keys)
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
@@ -151,9 +170,9 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
               Sadhana Practices
             </h4>
             
-            {sadhanas.length > 0 ? (
+            {visibleSadhanas.length > 0 ? (
               <div className="space-y-2">
-                {sadhanas.map(s => {
+                {visibleSadhanas.map(s => {
                   const isChecked = completed[s.id] || false;
                   const count = counts[s.id] ?? 1;
                   const colorHex = getColorHex(s.colorPreset);
@@ -355,7 +374,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
               </div>
             ) : (
               <div className="py-6 text-center text-slate-500 text-xs">
-                No practices defined. Set up practices in settings first.
+                No active practices for this day. Add a permanent daily practice in settings or resolve a new vow.
               </div>
             )}
           </div>
