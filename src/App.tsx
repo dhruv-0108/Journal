@@ -6,7 +6,7 @@ import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
 import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST } from './sadhanaUtils';
-import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud } from 'lucide-react';
+import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut } from 'lucide-react';
 
 // Firebase imports
 import { auth } from './firebase';
@@ -457,26 +457,100 @@ function App() {
           {/* Tab 3: Dynamic Sadhanas Settings */}
           {activeTab === 'settings' && (
             <div className="animate-fade-in space-y-6">
-              {/* User Profile Settings Card */}
-              <div className="glass-panel rounded-lg p-5 flex flex-col md:flex-row gap-4 items-center justify-between border border-white/[0.04]">
-                <div>
-                  <h3 className="font-serif text-white font-semibold text-sm">Journal Profile</h3>
-                  <p className="text-xs text-slate-500 font-sans mt-0.5">Edit your name displayed in your daily greetings.</p>
+              {/* Premium Profile & Account Settings Card */}
+              <div className="glass-panel rounded-2xl p-6 border border-white/[0.06] shadow-xl space-y-6">
+                <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+                  
+                  {/* Profile Detail Block */}
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left w-full sm:w-auto">
+                    {/* Avatar Initials Circle */}
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sadhana-gold/20 via-purple-500/10 to-indigo-500/10 border border-sadhana-gold/30 flex items-center justify-center font-serif text-2xl font-bold text-sadhana-gold-accent shadow-inner shrink-0">
+                      {(store.username || 'S').charAt(0).toUpperCase()}
+                    </div>
+                    
+                    {/* Name and Synced indicator */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 justify-center sm:justify-start">
+                        <h3 className="font-serif text-white font-bold text-lg tracking-wide">
+                          {store.username || 'Sadhaka'}
+                        </h3>
+                        {currentUser ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-sadhana-emerald/10 text-sadhana-emerald border border-sadhana-emerald/20 uppercase tracking-wide font-sans">
+                            Synced
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-800 text-slate-400 border border-white/5 uppercase tracking-wide font-sans">
+                            Guest
+                          </span>
+                        )}
+                      </div>
+                      
+                      {currentUser ? (
+                        <p className="text-xs text-slate-400 font-mono">{currentUser.email}</p>
+                      ) : (
+                        <p className="text-xs text-slate-500 font-sans italic">Data stored locally on this device</p>
+                      )}
+                      
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400 pt-1">
+                        {currentUser ? (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-sadhana-emerald animate-pulse" />
+                            <span>Connected to cloud backup</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            <span>Offline storage active</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Account Actions */}
+                  <div className="flex flex-col gap-2 w-full md:w-auto sm:items-end justify-center">
+                    {currentUser ? (
+                      <button
+                        onClick={handleSignOut}
+                        className="px-5 py-2.5 text-xs font-semibold text-rose-400 hover:text-white bg-rose-950/15 hover:bg-rose-600 border border-rose-900/30 hover:border-transparent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Sign Out Account
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setShowAuthPage(true)}
+                        className="px-5 py-2.5 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold-accent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow-lg shadow-sadhana-gold/10"
+                      >
+                        <Cloud className="w-3.5 h-3.5" />
+                        Sync with Cloud
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2 items-center w-full md:w-auto">
-                  <input 
-                    type="text" 
-                    value={tempUsernameEdit} 
-                    onChange={e => setTempUsernameEdit(e.target.value)}
-                    className="bg-sadhana-dark border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-sadhana-gold-accent font-serif"
-                  />
-                  <button 
-                    onClick={handleSaveUsernameEdit}
-                    className="px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold-accent rounded-lg transition-colors font-sans"
-                  >
-                    Save
-                  </button>
+
+                {/* Editable Name fields block */}
+                <div className="pt-5 border-t border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-semibold text-slate-300 font-sans">Edit Display Name</h4>
+                    <p className="text-[10px] text-slate-500 font-sans">Modify your name displayed across greetings and stats.</p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto items-center">
+                    <input 
+                      type="text" 
+                      value={tempUsernameEdit} 
+                      onChange={e => setTempUsernameEdit(e.target.value)}
+                      className="flex-1 sm:w-60 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 outline-none focus:border-sadhana-gold-accent font-serif"
+                    />
+                    <button 
+                      onClick={handleSaveUsernameEdit}
+                      className="px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold-accent rounded-xl transition-colors font-sans shrink-0"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
                 </div>
+
               </div>
 
               <SadhanaManager
