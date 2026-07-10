@@ -25,6 +25,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   const [title, setTitle]       = useState('');
   const [sadhanaId, setSadhanaId] = useState(sadhanas[0]?.id || '');
   const [startDate, setStartDate] = useState(formatDateString(new Date()));
+  const [practiceType, setPracticeType] = useState<'stotra' | 'mantra'>('stotra');
 
   // ── Goal (Step 2) ────────────────────────────────────────────────────────
   const [goalStr,  setGoalStr]  = useState('');          // raw string the user types
@@ -38,7 +39,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
 
   // ── Derived: selected sadhana metadata ───────────────────────────────────
   const selectedSadhana = sadhanas.find(s => s.id === sadhanaId);
-  const isMalaType      = selectedSadhana?.countType === 'mala';
+  const isMalaType      = practiceType === 'mantra';
   const repUnit         = isMalaType ? 'Reps' : (selectedSadhana?.countUnit || 'Times');
 
   // ── Derived: goal in both units ───────────────────────────────────────────
@@ -90,11 +91,25 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   // ── Reset form ────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
     setTitle(''); setGoalStr(''); setGoalUnit('mala');
-    if (sadhanas.length > 0) setSadhanaId(sadhanas[0].id);
+    const defaultSadhana = sadhanas[0];
+    if (defaultSadhana) {
+      setSadhanaId(defaultSadhana.id);
+      setPracticeType(defaultSadhana.countType === 'mala' ? 'mantra' : 'stotra');
+    }
     setStartDate(formatDateString(new Date()));
     setCalcSub('calc-days');
     setCapacityStr(''); setCapUnit('mala'); setModeBDaysStr('41');
     setIsFormOpen(true);
+  };
+
+  const handleSadhanaChange = (id: string) => {
+    setSadhanaId(id);
+    const config = sadhanas.find(s => s.id === id);
+    if (config) {
+      setPracticeType(config.countType === 'mala' ? 'mantra' : 'stotra');
+    }
+    setGoalStr('');
+    setCapacityStr('');
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -232,7 +247,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
               <label className={labelCls}>Select Practice</label>
               <select
                 value={sadhanaId}
-                onChange={e => { setSadhanaId(e.target.value); setGoalStr(''); setCapacityStr(''); }}
+                onChange={e => handleSadhanaChange(e.target.value)}
                 className={inputCls}
               >
                 {sadhanas.map(s => (
@@ -243,6 +258,33 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
               </select>
             </div>
             <div>
+              <label className={labelCls}>Practice Type</label>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => { setPracticeType('stotra'); setGoalStr(''); setCapacityStr(''); }}
+                  className={`flex-1 text-center py-2 rounded-xl text-xs font-semibold border transition-all ${
+                    practiceType === 'stotra'
+                      ? 'bg-sadhana-gold/15 text-sadhana-gold border-sadhana-gold/30'
+                      : 'bg-white/[0.03] text-slate-500 border border-white/10 hover:border-white/20 hover:text-slate-300'
+                  }`}
+                >
+                  Stotra (Reps)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPracticeType('mantra'); setGoalStr(''); setCapacityStr(''); }}
+                  className={`flex-1 text-center py-2 rounded-xl text-xs font-semibold border transition-all ${
+                    practiceType === 'mantra'
+                      ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+                      : 'bg-white/[0.03] text-slate-500 border border-white/10 hover:border-white/20 hover:text-slate-300'
+                  }`}
+                >
+                  Mantra (Mala)
+                </button>
+              </div>
+            </div>
+            <div className="col-span-1 md:col-span-2">
               <label className={labelCls}>Start Date</label>
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
                 required className={inputCls} />
