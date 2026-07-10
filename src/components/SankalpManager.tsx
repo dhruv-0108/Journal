@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, X, Calendar, Sparkles, Trash2, Calculator, Clock, Target } from 'lucide-react';
 import type { Sankalp, SadhanaConfig, SadhanaLogs } from '../types';
-import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount } from '../sadhanaUtils';
+import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount, getOffsetDateString } from '../sadhanaUtils';
 
 interface SankalpManagerProps {
   sankalps: Sankalp[];
@@ -446,6 +446,9 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       = <span className="text-white font-semibold">{modeATotalReps.toLocaleString()}</span> total repetitions
                     </p>
                   )}
+                  <p className="text-[10px] text-slate-400 pl-5">
+                    Vow runs from <span className="text-white font-semibold">{startDate}</span> to <span className="text-white font-semibold">{getOffsetDateString(startDate, modeADuration - 1)}</span>
+                  </p>
                   {/* Goal comparison */}
                   {goalVal > 0 && modeAMeetsGoal !== null && (
                     modeAMeetsGoal
@@ -599,6 +602,9 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       </p>
                     </div>
                   )}
+                  <div className="pt-2 border-t border-white/5 text-[10px] text-slate-400">
+                    Vow runs from <span className="text-white font-semibold">{startDate}</span> to <span className="text-white font-semibold">{getOffsetDateString(startDate, calcDaysNeeded - 1)}</span>
+                  </div>
                 </div>
               )}
 
@@ -656,6 +662,9 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       </p>
                     </div>
                   )}
+                  <div className="pt-2 border-t border-white/5 text-[10px] text-slate-400">
+                    Vow runs from <span className="text-white font-semibold">{startDate}</span> to <span className="text-white font-semibold">{getOffsetDateString(startDate, modeBDays - 1)}</span>
+                  </div>
                 </div>
               )}
 

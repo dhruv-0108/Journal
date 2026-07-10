@@ -443,6 +443,7 @@ function App() {
                 stats={stats}
                 sadhanas={store.sadhanas}
                 logs={store.logs}
+                sankalps={store.sankalps}
               />
             </div>
           </div>
