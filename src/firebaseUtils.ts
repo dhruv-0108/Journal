@@ -2,10 +2,32 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { SadhanaStore } from './types';
 
+// Recursive helper to clean undefined values so Firestore doesn't reject the write
+export const sanitizeForFirestore = (obj: any): any => {
+  if (obj === null || obj === undefined) {
+    return null;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeForFirestore);
+  }
+  if (typeof obj === 'object') {
+    const clean: any = {};
+    Object.keys(obj).forEach(key => {
+      const val = obj[key];
+      if (val !== undefined) {
+        clean[key] = sanitizeForFirestore(val);
+      }
+    });
+    return clean;
+  }
+  return obj;
+};
+
 // Save store to Firestore
 export const saveUserStoreToFirestore = async (uid: string, store: SadhanaStore): Promise<void> => {
   try {
-    await setDoc(doc(db, 'users', uid), store);
+    const cleanStore = sanitizeForFirestore(store);
+    await setDoc(doc(db, 'users', uid), cleanStore);
   } catch (error) {
     console.error('Failed to save store to Firestore:', error);
   }
@@ -28,8 +50,20 @@ export const loadUserStoreFromFirestore = async (uid: string): Promise<SadhanaSt
 
 // Clean merge helper so user data is never lost when logging in
 export const mergeStores = (local: SadhanaStore, cloud: SadhanaStore): SadhanaStore => {
-  // Merge logs (cloud logs overwrite conflicting keys, but we retain all distinct keys)
-  const mergedLogs = { ...local.logs, ...cloud.logs };
+  // Deep merge logs day-by-day and practice-by-practice so no logs are accidentally overwritten
+  const mergedLogs = { ...local.logs };
+  Object.entries(cloud.logs).forEach(([dateStr, cloudLog]) => {
+    const localLog = mergedLogs[dateStr];
+    if (!localLog) {
+      mergedLogs[dateStr] = cloudLog;
+    } else {
+      mergedLogs[dateStr] = {
+        completed: { ...localLog.completed, ...cloudLog.completed },
+        counts: { ...localLog.counts, ...cloudLog.counts },
+        notes: cloudLog.notes || localLog.notes
+      };
+    }
+  });
   
   // Merge custom sadhanas
   const sadhanaMap = new Map();
