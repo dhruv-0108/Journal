@@ -83,7 +83,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#07060a] text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-sadhana-dark text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-sadhana-gold/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/5 blur-[120px] pointer-events-none" />

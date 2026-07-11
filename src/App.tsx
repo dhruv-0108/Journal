@@ -104,10 +104,6 @@ function App() {
 
 
   const handleSaveUsernameEdit = () => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     if (!tempUsernameEdit.trim()) return;
     updateStore(prev => ({
       ...prev,
@@ -306,7 +302,7 @@ function App() {
   // Show full-screen loader if authenticating or syncing on startup
   if (isCloudSyncing && !store.username) {
     return (
-      <div className="min-h-screen bg-[#07060a] flex flex-col items-center justify-center gap-4 text-sadhana-gold-accent font-sans">
+      <div className="min-h-screen bg-sadhana-dark flex flex-col items-center justify-center gap-4 text-sadhana-gold-accent font-sans">
         <Compass className="w-16 h-16 animate-spin text-sadhana-gold" style={{ animationDuration: '6s' }} />
         <span className="text-sm font-serif tracking-[0.2em] uppercase text-slate-400">Loading Sadhana Mandala...</span>
       </div>

@@ -7,8 +7,8 @@
 @layer base {
   body {
     @apply bg-sadhana-dark text-sadhana-gold-dark font-serif min-h-screen selection:bg-sadhana-gold-accent selection:text-black;
-    background-image: none; /* Removed neon radial gradients for a clean look */
-    background-color: #131211;
+    background-image: none;
+    background-color: #faf9f6;
   }
 
   /* Custom minimal scrollbar */
@@ -20,33 +20,33 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.08);
     border-radius: 2px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #d6a978;
+    background: #b88e58;
   }
 }
 
-/* Redefined panels (Linen Diary Look) */
+/* Redefined panels (Linen Diary Look - Light Theme) */
 .glass-panel {
-  background: #1a1917;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
 }
 
 .glass-panel-hover {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-panel-hover:hover {
-  background: #23211f;
-  border-color: rgba(214, 169, 120, 0.15);
+  background: #fbfbf9;
+  border-color: rgba(184, 142, 88, 0.2);
 }
 
 .glass-modal {
-  background: #161514;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.1);
 }
 
 /* Reset template defaults if they conflict */
@@ -55,3 +55,176 @@
   display: block;
   min-height: 100vh;
 }
+
+/* --- Premium Light theme overrides --- */
+:root {
+  --bg-primary: #faf9f6;
+  --bg-secondary: #f2efe9;
+  --bg-card: #ffffff;
+  --text-primary: #2b2825;
+  --text-secondary: #706960;
+  --text-muted: #9e958a;
+  --accent-gold: #b88e58;
+  --border-light: rgba(0, 0, 0, 0.06);
+  --border-medium: rgba(0, 0, 0, 0.12);
+}
+
+/* Root level div bg reset */
+#root > div.bg-sadhana-dark,
+.bg-sadhana-dark {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Header */
+header, 
+.bg-\[\#161514\] {
+  background-color: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+/* Nav container & buttons */
+nav.bg-\[\#1e1c1a\]\/60 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+nav.bg-\[\#1e1c1a\]\/60 button {
+  color: var(--text-secondary) !important;
+}
+
+nav.bg-\[\#1e1c1a\]\/60 button.bg-sadhana-gold {
+  background-color: var(--accent-gold) !important;
+  color: #ffffff !important;
+}
+
+/* Text class color overrides */
+.text-white, 
+.text-slate-100, 
+.text-slate-200, 
+.text-slate-300, 
+h1, h2, h3, h4, h5, h6, 
+.font-serif.text-white,
+.font-sans.text-white {
+  color: var(--text-primary) !important;
+}
+
+.text-slate-400, 
+.text-slate-500, 
+.text-slate-600 {
+  color: var(--text-secondary) !important;
+}
+
+/* Accents */
+.text-sadhana-gold-accent, 
+.text-sadhana-gold {
+  color: var(--accent-gold) !important;
+}
+
+.bg-sadhana-gold\/10 {
+  background-color: rgba(184, 142, 88, 0.06) !important;
+}
+
+.border-sadhana-gold\/20, 
+.border-sadhana-gold\/25,
+.border-sadhana-gold-accent\/20,
+.border-sadhana-gold-accent\/30 {
+  border-color: rgba(184, 142, 88, 0.2) !important;
+}
+
+.border-sadhana-gold-accent {
+  border-color: var(--accent-gold) !important;
+}
+
+/* Inputs and interactive items */
+input, 
+textarea, 
+select,
+.bg-black\/40 {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-medium) !important;
+  color: var(--text-primary) !important;
+}
+
+input:focus, 
+textarea:focus, 
+select:focus {
+  border-color: var(--accent-gold) !important;
+  outline: none;
+}
+
+input::placeholder, 
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Calendar Specific Overrides */
+.bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.bg-white\/\[0\.01\] {
+  background-color: var(--bg-card) !important;
+}
+
+.bg-white\/\[0\.02\] {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.bg-white\/\[0\.005\] {
+  background-color: rgba(0, 0, 0, 0.01) !important;
+}
+
+.bg-white\/\[0\.015\] {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+.border-white\/\[0\.01\] {
+  border-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.border-white\/\[0\.03\] {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.border-white\/\[0\.04\] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* AuthPage card override */
+.bg-\[\#0f0e15\]\/80 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: var(--border-light) !important;
+}
+
+.col-span-2.bg-gradient-to-br {
+  background: linear-gradient(to bottom right, #fdfdfd, #f2efe9) !important;
+  border-right-color: var(--border-light) !important;
+}
+
+/* Button general overrides */
+button.bg-sadhana-gold,
+.bg-sadhana-gold {
+  background-color: var(--accent-gold) !important;
+  color: #ffffff !important;
+}
+
+button.bg-sadhana-gold:hover,
+.bg-sadhana-gold:hover {
+  background-color: #a47e4d !important;
+}
+
+/* User Gate Modal Overlay fix */
+.bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Clean transparent list backgrounds */
+.bg-white\/\[0\.005\] {
+  background-color: rgba(0, 0, 0, 0.01) !important;
+}
+

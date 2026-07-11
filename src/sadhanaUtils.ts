@@ -101,7 +101,6 @@ export const loadStore = (): SadhanaStore => {
     if (data) {
       const parsed = JSON.parse(data);
       if (!parsed.sadhanas) parsed.sadhanas = [];
-      parsed.sadhanas = parsed.sadhanas.filter((s: any) => s.id.startsWith('sadhana_'));
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
       // Run one-time migration to raw reps
