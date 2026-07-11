@@ -143,7 +143,7 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
   };
 
   return (
-    <div className="glass-panel rounded-lg p-4 md:p-6 shadow-md relative overflow-hidden flex flex-col h-full justify-between">
+    <div className="glass-panel rounded-lg p-4 md:p-6 shadow-md relative overflow-hidden flex flex-col">
       
       {/* Calendar Header */}
       <div className="flex justify-between items-center mb-6">
@@ -160,7 +160,7 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
             </p>
           </div>
         </div>
-
+ 
         <div className="flex items-center gap-1.5">
           <button 
             onClick={prevMonth}
@@ -182,7 +182,7 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
           </button>
         </div>
       </div>
-
+ 
       {/* Week Days Header */}
       <div className="grid grid-cols-7 gap-2 mb-2 text-center border-b border-white/[0.03] pb-1">
         {daysOfWeek.map(day => (
@@ -191,31 +191,10 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
           </div>
         ))}
       </div>
-
+ 
       {/* Grid Days */}
-      <div className="grid grid-cols-7 gap-2 flex-grow">
+      <div className="grid grid-cols-7 gap-2">
         {renderCells()}
-      </div>
-
-      {/* Calendar Legend */}
-      <div className="mt-6 pt-4 border-t border-white/[0.03] flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] text-slate-500 font-medium font-sans">
-        <span className="flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded border border-sadhana-gold/20 bg-sadhana-gold/5 flex items-center justify-center">
-            <Sparkles className="w-2.5 h-2.5 text-sadhana-gold-accent" />
-          </span>
-          Perfect Day (All Completed)
-        </span>
-        {sadhanas.map(s => (
-          <span key={s.id} className="flex items-center gap-1.5">
-            <span
-              className="w-3.5 h-1.5 rounded-sm"
-              style={{
-                backgroundColor: getColorHex(s.colorPreset)
-              }}
-            />
-            {s.name}
-          </span>
-        ))}
       </div>
     </div>
   );

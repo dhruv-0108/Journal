@@ -364,7 +364,7 @@ function App() {
         </div>
 
         {/* Center: Tabs selector */}
-        <nav className="flex p-0.5 rounded-xl bg-[#1e1c1a]/60 border border-white/[0.04] shadow-inner max-w-sm w-full sm:w-auto justify-between items-center gap-0.5">
+        <nav className="flex p-0.5 rounded-xl bg-[#1e1c1a]/60 border border-white/[0.04] shadow-inner max-w-md w-full sm:w-auto justify-between items-center gap-0.5">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`
@@ -480,7 +480,7 @@ function App() {
         {activeTab === 'dashboard' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start animate-fade-in">
             {/* Calendar Grid (2 columns on large screen) */}
-            <div className="lg:col-span-2 h-full">
+            <div className="lg:col-span-2">
               <Calendar 
                 logs={store.logs}
                 sadhanas={displaySadhanas}
@@ -490,7 +490,7 @@ function App() {
             </div>
 
             {/* Statistics (1 column on large screen) */}
-            <div className="h-full">
+            <div>
               <Stats 
                 stats={stats}
                 sadhanas={displaySadhanas}
