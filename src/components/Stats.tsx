@@ -76,25 +76,19 @@ export const Stats: React.FC<StatsProps> = ({ stats, sadhanas, logs, sankalps })
     };
   }, [sadhanas, logs]);
 
-  const formatMantraCount = (reps: number) => {
-    const MALA_REPS = 108;
-    const malas = Math.floor(reps / MALA_REPS);
-    const rem = reps % MALA_REPS;
-    if (malas > 0) {
-      return rem > 0 ? `${malas} Mala & ${rem} Reps` : `${malas} Mala${malas !== 1 ? 's' : ''}`;
+  const formatMilestoneCount = (count: number, unit: string) => {
+    if (count >= 1000) {
+      const kValue = count / 1000;
+      const formatted = kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1);
+      return `${formatted}K ${unit}`;
     }
-    return `${reps} Reps`;
-  };
-
-  const formatStotraCount = (reps: number, s: SadhanaConfig) => {
-    const unit = s.countUnit || 'Times';
-    return `${reps.toLocaleString()} ${unit}`;
+    return `${count.toLocaleString()} ${unit}`;
   };
 
   const milestonesList = [
-    mostChanted.mantra ? { type: 'Mantra', icon: <Flame className="w-3.5 h-3.5 text-sadhana-saffron" />, name: mostChanted.mantra.sadhana.name, formattedCount: formatMantraCount(mostChanted.mantra.count) } : null,
-    mostChanted.stotra ? { type: 'Stotra', icon: <Sun className="w-3.5 h-3.5 text-sadhana-blue" />, name: mostChanted.stotra.sadhana.name, formattedCount: formatStotraCount(mostChanted.stotra.count, mostChanted.stotra.sadhana) } : null,
-    mostChanted.chalisa ? { type: 'Chalisa', icon: <Flower2 className="w-3.5 h-3.5 text-sadhana-emerald" />, name: mostChanted.chalisa.sadhana.name, formattedCount: formatStotraCount(mostChanted.chalisa.count, mostChanted.chalisa.sadhana) } : null,
+    mostChanted.mantra ? { type: 'Mantra', icon: <Flame className="w-3.5 h-3.5 text-sadhana-saffron" />, name: mostChanted.mantra.sadhana.name, formattedCount: formatMilestoneCount(mostChanted.mantra.count, 'Reps') } : null,
+    mostChanted.stotra ? { type: 'Stotra', icon: <Sun className="w-3.5 h-3.5 text-sadhana-blue" />, name: mostChanted.stotra.sadhana.name, formattedCount: formatMilestoneCount(mostChanted.stotra.count, mostChanted.stotra.sadhana.countUnit || 'Times') } : null,
+    mostChanted.chalisa ? { type: 'Chalisa', icon: <Flower2 className="w-3.5 h-3.5 text-sadhana-emerald" />, name: mostChanted.chalisa.sadhana.name, formattedCount: formatMilestoneCount(mostChanted.chalisa.count, mostChanted.chalisa.sadhana.countUnit || 'Times') } : null,
   ].filter((item): item is NonNullable<typeof item> => item !== null);
 
   return (
