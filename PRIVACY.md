@@ -8,7 +8,7 @@ This Privacy Policy explains how your data is collected, stored, and managed whe
 
 ## 1. Data Controller and Contact Information
 * **Data Controller:** Dhruv Varachhiya
-* **Contact Email:** [Please insert your contact email address here, e.g. contact@yourdomain.com]
+* **Contact Email:** dhruv.varachhiya@gmail.com
 * **How to Contact Us:** For any questions, account requests, or to exercise your privacy rights, please contact the Data Controller at the email address provided above.
 
 ---
