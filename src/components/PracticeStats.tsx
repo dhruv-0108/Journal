@@ -82,8 +82,33 @@ const PracticeCard: React.FC<{
     }
     currentStreak = streak;
 
-    const totalDays = allDates.length;
-    const completionRate = totalDays > 0 ? Math.round((daysCompleted / totalDays) * 100) : 0;
+    const getDaysBetween = (startStr: string, endStr: string) => {
+      const start = new Date(startStr + 'T00:00:00');
+      const end = new Date(endStr + 'T00:00:00');
+      const diffTime = end.getTime() - start.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, diffDays) + 1;
+    };
+
+    const firstPracticeLogDate = allDates.find(dateStr => {
+      const log = logs[dateStr];
+      return log.completed[sadhana.id] === true || (log.counts[sadhana.id] || 0) > 0;
+    });
+
+    const firstSystemLogDate = allDates[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    let totalDaysForConsistency = 0;
+    if (firstPracticeLogDate) {
+      if (sadhana.performDaily && firstSystemLogDate) {
+        totalDaysForConsistency = getDaysBetween(firstSystemLogDate, todayStr);
+      } else {
+        totalDaysForConsistency = getDaysBetween(firstPracticeLogDate, todayStr);
+      }
+    }
+
+    const completionRate = totalDaysForConsistency > 0 ? Math.round((daysCompleted / totalDaysForConsistency) * 100) : 0;
+    const totalDays = totalDaysForConsistency || allDates.length;
     const associatedVows = sankalps.filter(s => s.sadhanaId === sadhana.id);
     const activeVows = associatedVows.filter(s => s.status === 'active');
     const completedVows = associatedVows.filter(s => s.status === 'completed');
