@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Calendar, Award, Activity, Target } from 'lucide-react';
+import { Calendar, Award, Activity, Target, Flame, Sun, Flower2 } from 'lucide-react';
 import type { DashboardStats, SadhanaConfig, SadhanaLogs, Sankalp } from '../types';
 import { getSankalpProgress, formatSadhanaCount } from '../sadhanaUtils';
 
@@ -23,9 +23,112 @@ export const Stats: React.FC<StatsProps> = ({ stats, sadhanas, logs, sankalps })
     return getSadhanaConfig(sadhanaId)?.name || 'Unknown Practice';
   };
 
+  // Helper to categorize a practice into Chalisa, Mantra, or Stotra
+  const getSadhanaCategory = (s: SadhanaConfig): 'chalisa' | 'mantra' | 'stotra' => {
+    const nameLower = s.name.toLowerCase();
+    if (nameLower.includes('chalisa')) return 'chalisa';
+    if (s.countType === 'mala') return 'mantra';
+    return 'stotra';
+  };
+
+  // Compute the most chanted practice for Mantra, Stotra, and Chalisa categories
+  const mostChanted = useMemo(() => {
+    // 1. Calculate lifetime sum of counts for each sadhana
+    const totals: Record<string, number> = {};
+    Object.values(logs).forEach(log => {
+      Object.entries(log.counts).forEach(([sadhanaId, count]) => {
+        totals[sadhanaId] = (totals[sadhanaId] || 0) + (count || 0);
+      });
+    });
+
+    // 2. Find max for each category
+    const bestMantra = { sadhana: null as SadhanaConfig | null, count: 0 };
+    const bestStotra = { sadhana: null as SadhanaConfig | null, count: 0 };
+    const bestChalisa = { sadhana: null as SadhanaConfig | null, count: 0 };
+
+    sadhanas.forEach(s => {
+      const total = totals[s.id] || 0;
+      if (total <= 0) return;
+
+      const cat = getSadhanaCategory(s);
+      if (cat === 'mantra') {
+        if (total > bestMantra.count) {
+          bestMantra.sadhana = s;
+          bestMantra.count = total;
+        }
+      } else if (cat === 'chalisa') {
+        if (total > bestChalisa.count) {
+          bestChalisa.sadhana = s;
+          bestChalisa.count = total;
+        }
+      } else { // stotra
+        if (total > bestStotra.count) {
+          bestStotra.sadhana = s;
+          bestStotra.count = total;
+        }
+      }
+    });
+
+    return {
+      mantra: bestMantra.sadhana ? { sadhana: bestMantra.sadhana, count: bestMantra.count } : null,
+      stotra: bestStotra.sadhana ? { sadhana: bestStotra.sadhana, count: bestStotra.count } : null,
+      chalisa: bestChalisa.sadhana ? { sadhana: bestChalisa.sadhana, count: bestChalisa.count } : null,
+    };
+  }, [sadhanas, logs]);
+
+  const formatMantraCount = (reps: number) => {
+    const MALA_REPS = 108;
+    const malas = Math.floor(reps / MALA_REPS);
+    const rem = reps % MALA_REPS;
+    if (malas > 0) {
+      return rem > 0 ? `${malas} Mala & ${rem} Reps` : `${malas} Mala${malas !== 1 ? 's' : ''}`;
+    }
+    return `${reps} Reps`;
+  };
+
+  const formatStotraCount = (reps: number, s: SadhanaConfig) => {
+    const unit = s.countUnit || 'Times';
+    return `${reps.toLocaleString()} ${unit}`;
+  };
+
+  const milestonesList = [
+    mostChanted.mantra ? { type: 'Mantra', icon: <Flame className="w-3.5 h-3.5 text-sadhana-saffron" />, name: mostChanted.mantra.sadhana.name, formattedCount: formatMantraCount(mostChanted.mantra.count) } : null,
+    mostChanted.stotra ? { type: 'Stotra', icon: <Sun className="w-3.5 h-3.5 text-sadhana-blue" />, name: mostChanted.stotra.sadhana.name, formattedCount: formatStotraCount(mostChanted.stotra.count, mostChanted.stotra.sadhana) } : null,
+    mostChanted.chalisa ? { type: 'Chalisa', icon: <Flower2 className="w-3.5 h-3.5 text-sadhana-emerald" />, name: mostChanted.chalisa.sadhana.name, formattedCount: formatStotraCount(mostChanted.chalisa.count, mostChanted.chalisa.sadhana) } : null,
+  ].filter((item): item is NonNullable<typeof item> => item !== null);
+
   return (
     <div className="space-y-6">
       
+      {/* Most Chanted Milestones */}
+      {milestonesList.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-sans">
+            Most Chanted Milestones
+          </h3>
+          <div className="glass-panel rounded-lg p-4 border border-white/[0.04] bg-white/[0.005]">
+            <div className={`grid gap-4 ${
+              milestonesList.length === 3 ? 'grid-cols-3' : milestonesList.length === 2 ? 'grid-cols-2' : 'grid-cols-1'
+            }`}>
+              {milestonesList.map((m, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="flex items-center gap-1 text-slate-500 font-sans uppercase text-[8px] font-bold tracking-wider">
+                    {m.icon}
+                    {m.type}
+                  </div>
+                  <div className="font-serif font-bold text-white text-xs leading-tight line-clamp-1" title={m.name}>
+                    {m.name}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono font-semibold">
+                    {m.formattedCount}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Timeframe Volumes Grid */}
       <div className="space-y-3">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 font-sans">
