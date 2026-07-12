@@ -77,11 +77,6 @@ export const Stats: React.FC<StatsProps> = ({ stats, sadhanas, logs, sankalps })
   }, [sadhanas, logs]);
 
   const formatMilestoneCount = (count: number, unit: string) => {
-    if (count >= 1000) {
-      const kValue = count / 1000;
-      const formatted = kValue % 1 === 0 ? kValue.toFixed(0) : kValue.toFixed(1);
-      return `${formatted}K ${unit}`;
-    }
     return `${count.toLocaleString()} ${unit}`;
   };
 
