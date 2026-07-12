@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - Sadhana Journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-cream: #faf9f6;
+      --card-white: #ffffff;
+      --text-charcoal: #2b2825;
+      --text-muted: #6b6661;
+      --gold-accent: #b88e58;
+      --border-soft: rgba(184, 142, 88, 0.15);
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-cream);
+      color: var(--text-charcoal);
+      margin: 0;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: var(--card-white);
+      padding: 50px;
+      border-radius: 20px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 4px 20px rgba(43, 40, 37, 0.03);
+    }
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      color: var(--text-charcoal);
+      margin-top: 30px;
+      font-weight: 700;
+    }
+    h1 {
+      font-size: 2.2rem;
+      border-bottom: 2px solid var(--gold-accent);
+      padding-bottom: 15px;
+      margin-top: 0;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    h2 {
+      font-size: 1.4rem;
+      color: var(--gold-accent);
+      border-bottom: 1px solid var(--border-soft);
+      padding-bottom: 8px;
+    }
+    h3 {
+      font-size: 1.1rem;
+    }
+    p, li {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 400;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    code {
+      font-family: monospace;
+      background-color: rgba(0, 0, 0, 0.03);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+    pre {
+      background-color: #2b2825;
+      color: #faf9f6;
+      padding: 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      font-family: monospace;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: var(--gold-accent);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to Journal</a>
+    <h1>Privacy Policy</h1>
+    <p style="text-align: center; font-style: italic; margin-top: -10px;">Effective Date: July 12, 2026</p>
+    
+    <p>This Privacy Policy outlines how your data is collected, stored, and managed when using the Sadhana Journal application. We are committed to protecting your privacy in accordance with global standards, including the European Union's General Data Protection Regulation (GDPR).</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>We collect only the minimum amount of data required to provide a functional and personalized spiritual logging experience:</p>
+    <ul>
+      <li><strong>Email Address & Password:</strong> Managed securely via Google Firebase Authentication. Your password is fully encrypted and never visible to us.</li>
+      <li><strong>Daily Completion Logs:</strong> Dates, completed practices, count values (multiples of Malas or raw repetitions), and optional journal reflections notes.</li>
+      <li><strong>Practice Settings:</strong> Names, color presets, units, and targets of custom practices you track.</li>
+      <li><strong>Sankalps (Vows):</strong> Active vow details, targets, duration days, and attempt retry histories.</li>
+      <li><strong>Local Cache:</strong> Browser local storage caches to save progress and support guest usage.</li>
+    </ul>
+
+    <h2>2. How We Store and Protect Your Data</h2>
+    <p>All data is transmitted securely over TLS/HTTPS. Your cloud records are stored in Google Cloud Firestore and are protected by strict server-side access controls, ensuring that only your authenticated account UID can read or write your logs.</p>
+    <pre><code>allow read, write: if request.auth != null && request.auth.uid == userId;</code></pre>
+
+    <h2>3. GDPR Compliance (European Privacy Standards)</h2>
+    <p>We comply fully with GDPR guidelines to ensure you retain ownership over your data:</p>
+    <ul>
+      <li><strong>Right of Access & Rectification:</strong> All stored logs are directly accessible and editable on your dashboard.</li>
+      <li><strong>Right to Erasure:</strong> You can delete any entries or custom items in the app. Deleting your account will permanently wipe all authentication and database records.</li>
+      <li><strong>Data Minimization:</strong> We do not collect cookies for tracking, location sharing, IP logging, or third-party usage analytics.</li>
+    </ul>
+
+    <h2>4. Third-Party Sharing</h2>
+    <p>We do not sell, rent, trade, or share your personal data, daily logs, or journal reflections with any third parties, advertisers, or marketing networks.</p>
+
+    <div class="footer">
+      © 2026 Sadhana Journal. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

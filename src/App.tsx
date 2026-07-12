@@ -681,6 +681,23 @@ function App() {
 
       </div>
 
+      {/* Footer */}
+      <footer className="max-w-6xl mx-auto px-4 py-8 mt-12 border-t border-white/[0.05] text-center space-y-2">
+        <p className="text-[10px] text-slate-500 font-sans tracking-wide">
+          © {new Date().getFullYear()} Sadhana Journal · Keep your practice consistent.
+        </p>
+        <div className="flex justify-center gap-4 text-[10px] text-slate-400 font-sans">
+          <a 
+            href="/privacy.html" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="hover:text-sadhana-gold transition-colors underline"
+          >
+            Privacy Policy
+          </a>
+        </div>
+      </footer>
+
       {/* Daily Editor Modal */}
       <SadhanaModal 
         date={selectedDate}
