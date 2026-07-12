@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import type { SadhanaStore } from './types';
 
@@ -81,4 +81,13 @@ export const mergeStores = (local: SadhanaStore, cloud: SadhanaStore): SadhanaSt
     sankalps: Array.from(sankalpMap.values()),
     logs: mergedLogs
   };
+};
+
+export const deleteUserStoreFromFirestore = async (uid: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, 'users', uid));
+  } catch (error) {
+    console.error('Failed to delete user document from Firestore:', error);
+    throw error;
+  }
 };

@@ -13,7 +13,7 @@ import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOu
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores } from './firebaseUtils';
+import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores, deleteUserStoreFromFirestore } from './firebaseUtils';
 import { AuthPage } from './components/AuthPage';
 
 type TabId = 'dashboard' | 'vows' | 'practices' | 'settings';
@@ -124,6 +124,47 @@ function App() {
         logs: {}
       });
       await signOut(auth);
+    }
+  };
+
+  // Delete account handler
+  const handleDeleteAccount = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const step1 = confirm("WARNING: Are you absolutely sure you want to permanently delete your account? This will erase all your synced cloud sadhana logs, vows, and settings. This action is irreversible.");
+    if (!step1) return;
+
+    const step2 = prompt("To confirm deletion, please type DELETE below:");
+    if (step2 !== "DELETE") {
+      alert("Account deletion canceled (confirmation text did not match).");
+      return;
+    }
+
+    try {
+      // 1. Delete Firestore document first while authenticated
+      await deleteUserStoreFromFirestore(user.uid);
+
+      // 2. Delete Firebase Authentication user
+      await user.delete();
+
+      // 3. Clear local storage and reset state
+      localStorage.removeItem('sadhana_journal_store_v2');
+      setStore({
+        username: '',
+        sadhanas: [],
+        sankalps: [],
+        logs: {}
+      });
+
+      alert("Your account and all associated data have been permanently deleted.");
+    } catch (error: any) {
+      console.error("Account deletion failed:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        alert("For security reasons, deleting your account requires a recent login. Please sign out, sign in again, and retry.");
+      } else {
+        alert(`Failed to delete account: ${error.message || error}`);
+      }
     }
   };
 
@@ -626,13 +667,21 @@ function App() {
                 {/* Account Actions */}
                 <div className="flex flex-col gap-2 w-full md:w-auto sm:items-end justify-center">
                   {currentUser ? (
-                    <button
-                      onClick={handleSignOut}
-                      className="px-5 py-2.5 text-xs font-semibold text-rose-400 hover:text-white bg-rose-950/15 hover:bg-rose-600 border border-rose-900/30 hover:border-transparent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      Sign Out Account
-                    </button>
+                    <>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold text-rose-400 hover:text-white bg-rose-950/15 hover:bg-rose-600 border border-rose-900/30 hover:border-transparent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Sign Out Account
+                      </button>
+                      <button
+                        onClick={handleDeleteAccount}
+                        className="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold text-rose-500 hover:text-white bg-transparent hover:bg-rose-600/90 border border-rose-500/30 hover:border-transparent rounded-xl transition-all duration-200 font-sans flex items-center justify-center gap-1.5 shadow"
+                      >
+                        Delete Account
+                      </button>
+                    </>
                   ) : (
                     <button
                       onClick={() => setShowAuthPage(true)}
