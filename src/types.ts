@@ -29,15 +29,25 @@ export interface SadhanaDayLog {
 
 export type SadhanaLogs = Record<string, SadhanaDayLog>; // Key is YYYY-MM-DD date string
 
+export interface SankalpAttempt {
+  id: string;
+  startDate: string;
+  durationDays: number;
+  targetCount: number;
+  status: 'completed' | 'abandoned';
+  daysCompleted: number;
+}
+
 export interface Sankalp {
   id: string;
   title: string;
   sadhanaId: string;
-  targetCount: number;                // Daily target in raw reps (for mala type: multiples of 108)
-  durationDays: number;               // Length of the vow in days (e.g. 11, 21, 41, 108)
-  startDate: string;                  // YYYY-MM-DD start date
+  targetCount: number;                // Daily target in raw reps (for current attempt)
+  durationDays: number;               // Length of the vow in days (for current attempt)
+  startDate: string;                  // YYYY-MM-DD start date (for current attempt)
   notes?: string;                     // Initial intention/notes
   status: 'active' | 'completed' | 'abandoned';
+  attempts?: SankalpAttempt[];        // History of attempts
 }
 
 export interface SadhanaStore {

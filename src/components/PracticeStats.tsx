@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { Flame, Shield, Flower2, Sparkles, Sun, Award, BarChart3 } from 'lucide-react';
+import { Flame, Shield, Flower2, Sparkles, Sun, BarChart3 } from 'lucide-react';
 import type { SadhanaConfig, SadhanaColorPreset, SadhanaLogs, Sankalp } from '../types';
-import { getColorHex, getSankalpProgress, getOffsetDateString, MALA_REPS } from '../sadhanaUtils';
+import { getColorHex, MALA_REPS } from '../sadhanaUtils';
 
 interface PracticeStatsProps {
   sadhanas: SadhanaConfig[];
@@ -192,93 +192,6 @@ const PracticeCard: React.FC<{
           </div>
         </div>
 
-        {/* Associated Vows */}
-        {stats.associatedVows.length > 0 && (
-          <div className="space-y-2 pt-3 border-t border-white/[0.04]">
-            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 font-sans flex items-center gap-1.5">
-              <Award className="w-3 h-3" />
-              Vow History ({stats.associatedVows.length})
-            </h4>
-            <div className="space-y-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
-              {stats.associatedVows.map(vow => {
-                const prog = getSankalpProgress(vow, logs);
-                const isCompleted = vow.status === 'completed';
-                const isAbandoned = vow.status === 'abandoned';
-                const endDateStr = getOffsetDateString(vow.startDate, vow.durationDays - 1);
-
-                return (
-                  <div
-                    key={vow.id}
-                    className="p-3 rounded-xl border space-y-2"
-                    style={{ borderColor: `${colorHex}12`, backgroundColor: `${colorHex}04` }}
-                  >
-                    <div className="flex justify-between items-start gap-2">
-                      <span className="text-xs font-semibold text-slate-200">{vow.title}</span>
-                      <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0 font-sans ${
-                        isCompleted
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'
-                          : isAbandoned
-                            ? 'bg-rose-950/20 text-rose-400 border border-rose-900/30'
-                            : 'bg-sadhana-gold/10 text-sadhana-gold border border-sadhana-gold/25'
-                      }`}>
-                        {vow.status}
-                      </span>
-                    </div>
-
-                    <div className="text-[9px] text-slate-500 font-mono">
-                      {vow.startDate} → {endDateStr} · {vow.durationDays}d
-                    </div>
-
-                    {/* Mini progress */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-slate-500">Target met</span>
-                        <span className="font-bold text-white font-mono">{prog.daysCompleted}/{prog.daysTotal} days ({prog.progressPercent}%)</span>
-                      </div>
-                      <div className="w-full h-1 rounded bg-white/[0.03] overflow-hidden">
-                        <div
-                          className={`h-full rounded transition-all duration-500 ${
-                            isCompleted ? 'bg-emerald-500' : isAbandoned ? 'bg-rose-600' : ''
-                          }`}
-                          style={{
-                            width: `${prog.progressPercent}%`,
-                            backgroundColor: (!isCompleted && !isAbandoned) ? colorHex : undefined
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Day dot tracker */}
-                    <div className="flex flex-wrap gap-0.5">
-                      {prog.timelineDays.slice(0, 60).map((day, idx) => {
-                        let bg = 'bg-white/[0.02] border-white/[0.03]';
-                        if (day.logged) {
-                          bg = day.success
-                            ? 'bg-emerald-500/80 border-emerald-500/20'
-                            : 'bg-rose-600/40 border-rose-600/20';
-                        }
-                        return (
-                          <span
-                            key={day.dateStr}
-                            className={`w-2 h-2 rounded-sm border transition-all ${bg}`}
-                            title={`Day ${idx + 1}: ${day.logged ? (day.success ? '✓ Done' : '✗ Missed') : 'Unlogged'}`}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Empty vows state */}
-        {stats.associatedVows.length === 0 && (
-          <div className="pt-3 border-t border-white/[0.04] text-center py-4">
-            <p className="text-[10px] text-slate-600 font-sans">No vows taken for this practice yet.</p>
-          </div>
-        )}
       </div>
     </div>
   );

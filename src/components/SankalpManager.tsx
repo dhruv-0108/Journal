@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, X, Calendar, Sparkles, Trash2, Target } from 'lucide-react';
+import { Plus, X, Calendar, Sparkles, Trash2, Target, RotateCcw } from 'lucide-react';
 import type { Sankalp, SadhanaConfig, SadhanaLogs } from '../types';
 import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount, getOffsetDateString } from '../sadhanaUtils';
 
@@ -17,6 +17,11 @@ interface SankalpManagerProps {
   }) => void;
   onUpdateStatus: (id: string, status: 'completed' | 'abandoned') => void;
   onDelete: (id: string) => void;
+  onRetry: (id: string, retryData: {
+    startDate: string;
+    durationDays: number;
+    targetCount: number;
+  }) => void;
 }
 
 type GoalUnit   = 'mala' | 'reps';        // only relevant for mala-type practices
@@ -24,7 +29,7 @@ type DailyUnit  = 'mala' | 'reps';        // only relevant for mala-type practic
 type CalcSub    = 'calc-days' | 'calc-daily';
 
 export const SankalpManager: React.FC<SankalpManagerProps> = ({
-  sankalps, sadhanas, logs, onAdd, onUpdateStatus, onDelete
+  sankalps, sadhanas, logs, onAdd, onUpdateStatus, onDelete, onRetry
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -43,6 +48,12 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   const [capUnit,      setCapUnit]      = useState<DailyUnit>('mala');
   const [modeBDaysStr, setModeBDaysStr] = useState('41'); // duration for calc-daily
 
+  // ── Retry States ─────────────────────────────────────────────────────────
+  const [retryingSankalpId, setRetryingSankalpId] = useState<string | null>(null);
+  const [retryStartDate, setRetryStartDate] = useState(formatDateString(new Date()));
+  const [retryDuration, setRetryDuration] = useState(41);
+  const [retryTarget, setRetryTarget] = useState(1);
+
   // ── Derived: selected sadhana metadata ───────────────────────────────────
   const isMalaType      = practiceType === 'mantra';
   const repUnit         = isMalaType ? 'Reps' : 'Times';
@@ -50,7 +61,6 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   // ── Derived: goal in both units ───────────────────────────────────────────
   const goalVal = parseInt(goalStr, 10) || 0;
 
-  // goalMalas / goalReps are always in mala ↔ rep cross-form
   const goalMalas = useMemo(() => {
     if (!isMalaType || goalVal <= 0) return goalVal;
     return goalUnit === 'mala' ? goalVal : Math.ceil(goalVal / MALA_REPS);
@@ -138,11 +148,31 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     setIsFormOpen(false);
   };
 
+  const handleStartRetryClick = (s: Sankalp) => {
+    setRetryingSankalpId(s.id);
+    setRetryStartDate(formatDateString(new Date()));
+    setRetryDuration(s.durationDays);
+    setRetryTarget(s.targetCount);
+  };
+
+  const handleSaveRetry = (s: Sankalp) => {
+    onRetry(s.id, {
+      startDate: retryStartDate || formatDateString(new Date()),
+      durationDays: retryDuration || s.durationDays,
+      targetCount: retryTarget || s.targetCount
+    });
+    setRetryingSankalpId(null);
+  };
+
   const getSadhanaName   = (id: string) => sadhanas.find(s => s.id === id)?.name ?? 'Unknown Practice';
   const getSadhanaConfig = (id: string): SadhanaConfig | undefined => sadhanas.find(s => s.id === id);
 
   const activeSankalps    = sankalps.filter(s => s.status === 'active');
-  const completedSankalps = sankalps.filter(s => s.status !== 'active');
+  
+  // History lists completed/abandoned vows AND active vows that have at least one previous attempt
+  const sankalpsInHistory = useMemo(() => {
+    return sankalps.filter(s => s.status !== 'active' || (s.attempts && s.attempts.length > 0));
+  }, [sankalps]);
 
   // ── Shared styles ──────────────────────────────────────────────────────────
   const inputCls  = 'w-full bg-sadhana-dark border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition-all focus:border-sadhana-gold/50 font-mono';
@@ -540,6 +570,50 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {activeSankalps.map(s => {
               const prog = getSankalpProgress(s, logs);
+              const isRetrying = retryingSankalpId === s.id;
+
+              if (isRetrying) {
+                return (
+                  <div key={s.id}
+                    className="p-5 rounded-lg border border-sadhana-gold/25 bg-white/[0.015] flex flex-col justify-between transition-colors shadow relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-[3px] h-full bg-sadhana-gold" />
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-serif text-white font-bold tracking-wide">Restart Vow: {s.title}</h4>
+                        <button type="button" onClick={() => setRetryingSankalpId(null)} className="text-slate-500 hover:text-white">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Start Date</label>
+                          <input type="date" value={retryStartDate} onChange={e => setRetryStartDate(e.target.value)} className="w-full bg-sadhana-dark border border-white/10 rounded-lg p-2 text-xs text-white" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Duration (Days)</label>
+                          <input type="number" min="1" value={retryDuration} onChange={e => setRetryDuration(parseInt(e.target.value, 10) || 1)} className="w-full bg-sadhana-dark border border-white/10 rounded-lg p-2 text-xs text-white font-mono" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Daily Target ({isMalaType ? 'Reps' : 'Times'})</label>
+                          <input type="number" min="1" value={retryTarget} onChange={e => setRetryTarget(parseInt(e.target.value, 10) || 1)} className="w-full bg-sadhana-dark border border-white/10 rounded-lg p-2 text-xs text-white font-mono" />
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.04]">
+                        <button onClick={() => setRetryingSankalpId(null)} className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 hover:text-white">
+                          Cancel
+                        </button>
+                        <button onClick={() => handleSaveRetry(s)} className="px-4 py-1.5 text-[10px] font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl flex items-center gap-1 shadow-lg shadow-sadhana-gold/10">
+                          <RotateCcw className="w-3 h-3" />
+                          Begin Attempt #{ (s.attempts?.length || 0) + 2 }
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={s.id}
                   className="p-5 rounded-lg border border-white/[0.04] bg-white/[0.005] hover:bg-white/[0.015] flex flex-col justify-between transition-colors shadow relative overflow-hidden group">
@@ -565,6 +639,11 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                           className="px-2 py-1 text-[9px] font-bold text-slate-400 hover:text-rose-400 bg-white/5 hover:bg-rose-950/20 border border-white/10 hover:border-rose-900/20 rounded-md transition-colors">
                           Abandon
                         </button>
+                        <button onClick={() => handleStartRetryClick(s)}
+                          className="px-2 py-1 text-[9px] font-bold text-sadhana-gold bg-sadhana-gold/10 hover:bg-sadhana-gold/25 border border-sadhana-gold/20 rounded-md transition-colors flex items-center gap-0.5">
+                          <RotateCcw className="w-2.5 h-2.5" />
+                          Retry
+                        </button>
                       </div>
                     </div>
                     <div className="space-y-1.5">
@@ -589,12 +668,12 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       <div className="flex flex-wrap gap-1 py-1">
                         {prog.timelineDays.map((day, idx) => {
                           let dotStyle = 'bg-white/[0.04] border-white/[0.05]';
-                          let title = `Day ${idx + 1} (${day.dateStr}): Unlogged / Future`;
+                          let timelineTitle = `Day ${idx + 1} (${day.dateStr}): Unlogged / Future`;
                           if (day.logged) {
-                            if (day.success) { dotStyle = 'bg-[#10b981] border-[#10b981]/20 shadow-[0_0_5px_rgba(16,185,129,0.3)] scale-[1.05]'; title = `Day ${idx + 1}: Met target!`; }
-                            else { dotStyle = 'bg-rose-600/70 border-rose-600/30'; title = `Day ${idx + 1}: Logged but missed target`; }
+                            if (day.success) { dotStyle = 'bg-[#10b981] border-[#10b981]/20 shadow-[0_0_5px_rgba(16,185,129,0.3)] scale-[1.05]'; timelineTitle = `Day ${idx + 1}: Met target!`; }
+                            else { dotStyle = 'bg-rose-600/70 border-rose-600/30'; timelineTitle = `Day ${idx + 1}: Logged but missed target`; }
                           }
-                          return <span key={day.dateStr} className={`w-3.5 h-3.5 rounded border transition-all duration-300 ${dotStyle}`} title={title} />;
+                          return <span key={day.dateStr} className={`w-3.5 h-3.5 rounded border transition-all duration-300 ${dotStyle}`} title={timelineTitle} />;
                         })}
                       </div>
                     </div>
@@ -610,35 +689,135 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
         )}
       </div>
 
-      {/* ── History ──────────────────────────────────────────────────── */}
+      {/* ── History & Vows Archive ───────────────────────────────────── */}
       <div className="space-y-4 pt-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">History & Vows Archive</h3>
-        {completedSankalps.length > 0 ? (
+        {sankalpsInHistory.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {completedSankalps.map(s => {
+            {sankalpsInHistory.map(s => {
               const prog = getSankalpProgress(s, logs);
+              const isActive = s.status === 'active';
               const isCompleted = s.status === 'completed';
+              const hasAttempts = s.attempts && s.attempts.length > 0;
+              const totalTries = (s.attempts?.length || 0) + 1;
+              const isRetrying = retryingSankalpId === s.id;
+
+              if (isRetrying) {
+                return (
+                  <div key={s.id}
+                    className="p-4 rounded-xl border border-sadhana-gold/25 bg-white/[0.015] space-y-4">
+                    <div className="flex justify-between items-center border-b border-white/[0.05] pb-2">
+                      <h4 className="text-xs font-serif font-bold text-white">Restart Vow: {s.title}</h4>
+                      <button type="button" onClick={() => setRetryingSankalpId(null)} className="text-slate-500 hover:text-white">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Start Date</label>
+                        <input type="date" value={retryStartDate} onChange={e => setRetryStartDate(e.target.value)} className="w-full bg-sadhana-dark border border-white/10 rounded-lg p-2 text-xs text-white" />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Duration (Days)</label>
+                        <input type="number" min="1" value={retryDuration} onChange={e => setRetryDuration(parseInt(e.target.value, 10) || 1)} className="w-full bg-sadhana-dark border border-white/10 rounded-lg p-2 text-xs text-white font-mono" />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider block mb-1">Daily Target ({getSadhanaConfig(s.sadhanaId)?.countType === 'mala' ? 'Reps' : 'Times'})</label>
+                        <input type="number" min="1" value={retryTarget} onChange={e => setRetryTarget(parseInt(e.target.value, 10) || 1)} className="w-full bg-sadhana-dark border border-white/10 rounded-lg p-2 text-xs text-white font-mono" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.04]">
+                      <button onClick={() => setRetryingSankalpId(null)} className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 hover:text-white">
+                        Cancel
+                      </button>
+                      <button onClick={() => handleSaveRetry(s)} className="px-4 py-1.5 text-[10px] font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl flex items-center gap-1 shadow-lg shadow-sadhana-gold/10">
+                        <RotateCcw className="w-3 h-3" />
+                        Begin Try #{totalTries + 1}
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={s.id}
                   className="p-4 rounded-xl border border-white/[0.05] bg-white/[0.01] flex flex-col justify-between hover:bg-white/[0.02] transition-colors">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex justify-between items-start gap-1">
                       <h4 className="text-sm font-semibold text-slate-200">{s.title}</h4>
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
-                        isCompleted ? 'bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/25' : 'bg-rose-950/20 text-rose-400 border border-rose-900/30'
-                      }`}>{s.status}</span>
+                        isActive
+                          ? 'bg-sadhana-gold/10 text-sadhana-gold border border-sadhana-gold/25'
+                          : isCompleted 
+                            ? 'bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/25' 
+                            : 'bg-rose-950/20 text-rose-400 border border-rose-900/30'
+                      }`}>{isActive ? 'Active' : s.status}</span>
                     </div>
                     <div className="text-[10px] text-slate-500">
                       Practice: <span className="text-slate-400 font-semibold">{getSadhanaName(s.sadhanaId)}</span>
                     </div>
-                    <div className="flex justify-between text-xs font-mono text-slate-400">
-                      <span>Achieved:</span>
-                      <span className="font-bold">{prog.daysCompleted} / {prog.daysTotal} days</span>
+
+                    {/* Vow tries summary label */}
+                    <div className="text-[10px] text-slate-400">
+                      Attempts: <span className="text-white font-bold font-mono">{totalTries} {totalTries === 1 ? 'try' : 'tries'}</span>
+                    </div>
+
+                    {/* Collapsible / list previous tries */}
+                    {hasAttempts && (
+                      <div className="mt-2 pt-2 border-t border-white/[0.03] space-y-2">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Previous Attempts</span>
+                        <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                          {s.attempts!.map((attempt, index) => {
+                            const attemptEndDate = getOffsetDateString(attempt.startDate, attempt.durationDays - 1);
+                            const attemptProgPercent = Math.round((attempt.daysCompleted / attempt.durationDays) * 100);
+                            return (
+                              <div key={attempt.id} className="p-2 rounded-lg border border-white/[0.02] bg-white/[0.002] text-[9px] space-y-0.5">
+                                <div className="flex justify-between items-center">
+                                  <span className="font-semibold text-slate-400">Try #{index + 1}</span>
+                                  <span className={`text-[7px] px-1 rounded uppercase font-bold ${
+                                    attempt.status === 'completed' ? 'bg-[#10b981]/10 text-[#10b981]' : 'bg-rose-950/20 text-rose-400'
+                                  }`}>{attempt.status}</span>
+                                </div>
+                                <p className="text-slate-600 font-mono text-[8px]">{attempt.startDate} to {attemptEndDate} ({attempt.durationDays}d)</p>
+                                <div className="flex justify-between text-slate-500 font-mono">
+                                  <span>Achieved:</span>
+                                  <span>{attempt.daysCompleted} / {attempt.durationDays} days ({attemptProgPercent}%)</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Current/Final attempt results inside History Card */}
+                    <div className="mt-2 pt-2 border-t border-white/[0.03] space-y-1 bg-white/[0.005] p-2 rounded-lg">
+                      <div className="flex justify-between items-center text-[9px]">
+                        <span className="text-slate-400 font-semibold">
+                          {isActive ? `Ongoing Try #${totalTries}` : `Final Try #${totalTries}`}
+                        </span>
+                        <span className="text-slate-500 font-mono">{s.startDate} → {getOffsetDateString(s.startDate, s.durationDays - 1)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-mono text-slate-400">
+                        <span>Target met:</span>
+                        <span className="font-bold text-white">{prog.daysCompleted} / {prog.daysTotal} days ({prog.progressPercent}%)</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-white/[0.03]">
+                  
+                  <div className="flex justify-end items-center gap-2 mt-4 pt-2 border-t border-white/[0.03]">
+                    {!isActive && (
+                      <button onClick={() => handleStartRetryClick(s)}
+                        className="px-2 py-1 text-[9px] font-bold text-sadhana-gold bg-sadhana-gold/10 hover:bg-sadhana-gold/25 border border-sadhana-gold/20 rounded-md transition-colors flex items-center gap-0.5"
+                        title="Start a new try of this vow">
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        Restart Vow
+                      </button>
+                    )}
                     <button onClick={() => onDelete(s.id)}
-                      className="p-1 rounded hover:bg-white/5 text-slate-500 hover:text-rose-500 transition-colors" title="Delete from archive">
+                      className="p-1.5 rounded hover:bg-white/5 text-slate-500 hover:text-rose-500 transition-colors" title="Delete from archive">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>

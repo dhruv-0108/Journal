@@ -6,7 +6,7 @@ import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
 import { PracticeStats } from './components/PracticeStats';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
-import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST } from './sadhanaUtils';
+import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress } from './sadhanaUtils';
 import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3 } from 'lucide-react';
 
 // Firebase imports
@@ -255,6 +255,53 @@ function App() {
       ...prev,
       sankalps: prev.sankalps.filter(s => s.id !== id)
     }));
+  };
+
+  const handleRetrySankalp = (
+    id: string,
+    retryData: {
+      startDate: string;
+      durationDays: number;
+      targetCount: number;
+    }
+  ) => {
+    if (!currentUser) {
+      setShowGuestGate(true);
+      return;
+    }
+    updateStore(prev => {
+      const updatedSankalps = prev.sankalps.map(s => {
+        if (s.id !== id) return s;
+
+        // Calculate progress for current attempt before archiving it
+        const prog = getSankalpProgress(s, prev.logs);
+        
+        const newAttempt = {
+          id: `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          startDate: s.startDate,
+          durationDays: s.durationDays,
+          targetCount: s.targetCount,
+          status: s.status === 'active' ? ('abandoned' as const) : (s.status as 'completed' | 'abandoned'),
+          daysCompleted: prog.daysCompleted
+        };
+
+        const existingAttempts = s.attempts || [];
+
+        return {
+          ...s,
+          startDate: retryData.startDate,
+          durationDays: retryData.durationDays,
+          targetCount: retryData.targetCount,
+          status: 'active' as const,
+          attempts: [...existingAttempts, newAttempt]
+        };
+      });
+
+      return {
+        ...prev,
+        sankalps: updatedSankalps
+      };
+    });
   };
 
   // Daily Log Handlers
@@ -507,6 +554,7 @@ function App() {
               onAdd={handleAddSankalp}
               onUpdateStatus={handleUpdateSankalpStatus}
               onDelete={handleDeleteSankalp}
+              onRetry={handleRetrySankalp}
             />
           </div>
         )}
