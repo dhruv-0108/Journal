@@ -703,6 +703,17 @@ function App() {
 
       </div>
 
+      {/* Minimal Footer */}
+      <footer className="py-4 text-center text-[10px] text-slate-500 font-sans mt-auto">
+        <a 
+          href="/privacy.html" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="hover:text-sadhana-gold transition-colors underline"
+        >
+          Privacy Policy
+        </a>
+      </footer>
 
       {/* Daily Editor Modal */}
       <SadhanaModal 
