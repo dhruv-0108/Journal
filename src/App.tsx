@@ -29,7 +29,6 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [greeting, setGreeting] = useState<string>('Welcome to your spiritual space');
   
   const [tempUsernameEdit, setTempUsernameEdit] = useState('');
 
@@ -67,20 +66,6 @@ function App() {
       }
     });
     return () => unsubscribe();
-  }, []);
-
-  // 2. Set daily greeting based on hour of day
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour >= 4 && hour < 8) {
-      setGreeting('Brahma Muhurta – The auspicious hour of meditation');
-    } else if (hour >= 8 && hour < 12) {
-      setGreeting('Auspicious morning – May your practices flow with ease');
-    } else if (hour >= 12 && hour < 17) {
-      setGreeting('Mid-day check-in – Maintain your inner stillness');
-    } else {
-      setGreeting('Evening reflections – Connecting to the Divine source');
-    }
   }, []);
 
   // Sync username edit input with store
@@ -556,7 +541,6 @@ function App() {
               {activeTab === 'practices' && 'Practice Insights'}
               {activeTab === 'settings' && 'Practice Settings'}
             </h2>
-            <p className="text-[10px] text-slate-500 font-serif italic mt-0.5">"{greeting}"</p>
           </div>
         </div>
 
@@ -730,22 +714,6 @@ function App() {
 
       </div>
 
-      {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-4 py-8 mt-12 border-t border-white/[0.05] text-center space-y-2">
-        <p className="text-[10px] text-slate-500 font-sans tracking-wide">
-          © {new Date().getFullYear()} Sadhana Journal · Keep your practice consistent.
-        </p>
-        <div className="flex justify-center gap-4 text-[10px] text-slate-400 font-sans">
-          <a 
-            href="/privacy.html" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="hover:text-sadhana-gold transition-colors underline"
-          >
-            Privacy Policy
-          </a>
-        </div>
-      </footer>
 
       {/* Daily Editor Modal */}
       <SadhanaModal 
