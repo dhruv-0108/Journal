@@ -532,17 +532,6 @@ function App() {
         showGuestGate ? 'blur-[6px] pointer-events-none select-none' : ''
       }`}>
         
-        {/* Subtle dynamic tab banner */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-white/[0.03] pb-4">
-          <div>
-            <h2 className="text-xs font-sans font-bold text-slate-400 uppercase tracking-widest">
-              {activeTab === 'dashboard' && 'Dashboard Overview'}
-              {activeTab === 'vows' && 'Vows & Resolutions'}
-              {activeTab === 'practices' && 'Practice Insights'}
-              {activeTab === 'settings' && 'Practice Settings'}
-            </h2>
-          </div>
-        </div>
 
         {/* Tab 1: Dashboard */}
         {activeTab === 'dashboard' && (
