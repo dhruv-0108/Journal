@@ -89,10 +89,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/5 blur-[120px] pointer-events-none" />
 
       {/* Main card */}
-      <div className="max-w-4xl w-full grid md:grid-cols-5 rounded-2xl border border-white/[0.06] overflow-hidden shadow-2xl bg-[#0f0e15]/80 backdrop-blur-xl relative z-10">
+      <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-5 rounded-2xl border border-white/[0.06] overflow-hidden shadow-2xl bg-[#0f0e15]/80 backdrop-blur-xl relative z-10">
         
         {/* Left Side: Branding / Sanskrit Quote */}
-        <div className="col-span-2 bg-gradient-to-br from-[#1b122c] via-[#0f0e15] to-[#0a090f] p-8 flex flex-col justify-between border-r border-white/[0.06] relative">
+        <div className="col-span-1 md:col-span-2 bg-gradient-to-br from-[#1b122c] via-[#0f0e15] to-[#0a090f] p-6 sm:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/[0.06] relative">
           {/* Ambient background decoration */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_70%)] pointer-events-none" />
           
@@ -109,7 +109,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
           {/* Sanskrit Sloka */}
           <div className="space-y-4 my-8 relative z-10 text-center md:text-left">
-            <p className="text-xl font-serif text-sadhana-gold-accent italic leading-relaxed">
+            <p className="text-lg sm:text-xl font-serif text-sadhana-gold-accent italic leading-relaxed">
               तस्माच्छास्त्रं प्रमाणं ते कार्याकार्यव्यवस्थितौ।
             </p>
             <p className="text-xs text-slate-400 font-serif leading-relaxed">
@@ -124,7 +124,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         </div>
 
         {/* Right Side: Auth Form */}
-        <form onSubmit={handleSubmit} className="col-span-3 p-8 flex flex-col justify-center space-y-6">
+        <form onSubmit={handleSubmit} className="col-span-1 md:col-span-3 p-6 sm:p-8 flex flex-col justify-center space-y-6">
           
           {/* Header titles */}
           <div className="space-y-1">

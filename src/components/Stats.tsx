@@ -97,7 +97,7 @@ export const Stats: React.FC<StatsProps> = ({ stats, sadhanas, logs, sankalps })
           </h3>
           <div className="glass-panel rounded-lg p-4 border border-white/[0.04] bg-white/[0.005]">
             <div className={`grid gap-4 ${
-              milestonesList.length === 3 ? 'grid-cols-3' : milestonesList.length === 2 ? 'grid-cols-2' : 'grid-cols-1'
+              milestonesList.length === 3 ? 'grid-cols-1 sm:grid-cols-3' : milestonesList.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
             }`}>
               {milestonesList.map((m, idx) => (
                 <div key={idx} className="space-y-1">

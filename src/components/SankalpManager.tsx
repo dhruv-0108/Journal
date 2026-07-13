@@ -215,7 +215,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     <div className="glass-panel rounded-lg p-6 border border-white/[0.04] shadow-sm space-y-6">
       
       {/* ── Header ────────────────────────────────────────────────────── */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-xl font-serif text-white font-semibold">Sankalp (Spiritual Vows)</h2>
           <p className="text-xs text-slate-500 font-sans mt-0.5">
@@ -225,7 +225,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
         {!isFormOpen && (
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             Resolve New Vow
@@ -431,12 +431,12 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
             {calcSub === 'calc-days' && goalVal > 0 && capVal > 0 && calcDaysNeeded && (
               <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-3">
                 <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold">Your Personalised Plan</p>
-                <div className="flex flex-wrap gap-5 items-start">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-5 items-start">
                   <div>
                     <p className="text-2xl font-bold text-white font-mono">{calcDaysNeeded}</p>
                     <p className="text-[10px] text-slate-400">Days Required</p>
                   </div>
-                  <div className="w-px bg-white/10 self-stretch" />
+                  <div className="hidden sm:block w-px bg-white/10 self-stretch" />
                   <div>
                     {isMalaType ? (
                       <>
@@ -451,7 +451,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       </>
                     )}
                   </div>
-                  <div className="w-px bg-white/10 self-stretch" />
+                  <div className="hidden sm:block w-px bg-white/10 self-stretch" />
                   <div>
                     {isMalaType ? (
                       <>
@@ -491,7 +491,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
             {calcSub === 'calc-daily' && goalVal > 0 && modeBDays > 0 && (isMalaType ? calcDailyMalas : calcDailyReps) && (
               <div className="p-3 rounded-xl border border-purple-500/25 bg-purple-600/[0.06] space-y-3">
                 <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold">Your Personalised Plan</p>
-                <div className="flex flex-wrap gap-5 items-start">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-5 items-start">
                   <div>
                     {isMalaType && calcDailyMalas ? (
                       <>
@@ -506,12 +506,12 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       </>
                     )}
                   </div>
-                  <div className="w-px bg-white/10 self-stretch" />
+                  <div className="hidden sm:block w-px bg-white/10 self-stretch" />
                   <div>
                     <p className="text-2xl font-bold text-white font-mono">{modeBDays}</p>
                     <p className="text-[10px] text-slate-400">Days Duration</p>
                   </div>
-                  <div className="w-px bg-white/10 self-stretch" />
+                  <div className="hidden sm:block w-px bg-white/10 self-stretch" />
                   <div>
                     {isMalaType ? (
                       <>
@@ -619,7 +619,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                   className="p-5 rounded-lg border border-white/[0.04] bg-white/[0.005] hover:bg-white/[0.015] flex flex-col justify-between transition-colors shadow relative overflow-hidden group">
                   <div className="absolute top-0 left-0 w-[3px] h-full bg-sadhana-gold" />
                   <div className="space-y-4">
-                    <div className="flex justify-between items-start gap-2">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                       <div>
                         <h4 className="text-base font-serif text-white font-bold tracking-wide">{s.title}</h4>
                         <div className="text-[10px] text-slate-500 font-sans mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 items-center">
@@ -630,7 +630,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                           <span className="flex items-center gap-0.5 font-mono"><Calendar className="w-3 h-3" /> {s.startDate}</span>
                         </div>
                       </div>
-                      <div className="flex gap-1.5 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity">
+                      <div className="flex flex-wrap gap-1.5 shrink-0 opacity-100 sm:opacity-40 sm:group-hover:opacity-100 transition-opacity">
                         <button onClick={() => onUpdateStatus(s.id, 'completed')}
                           className="px-2 py-1 text-[9px] font-bold text-[#10b981] bg-[#10b981]/10 hover:bg-[#10b981]/25 border border-[#10b981]/20 rounded-md transition-colors">
                           Mark Complete

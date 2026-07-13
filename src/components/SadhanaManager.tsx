@@ -110,7 +110,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
     <div className="glass-panel rounded-lg p-6 border border-white/[0.04] shadow-sm space-y-6">
       
       {/* Title Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-xl font-serif text-white font-semibold">Sadhana Practices</h2>
           <p className="text-xs text-slate-500 font-sans mt-0.5">
@@ -120,7 +120,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
         {!isFormOpen && (
           <button
             onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             Add Custom Practice
@@ -226,7 +226,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
           {hasCount && (
             <div className="space-y-2 animate-fade-in">
               <label className="text-xs font-semibold text-slate-400 block">Count Mode</label>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 {/* Simple Reps option */}
                 <button
                   type="button"
@@ -300,7 +300,7 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
           {/* Color Preset Selector */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-400 block">Psychology & Visual Color Preset</label>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4 pt-1">
               {COLOR_PRESETS.map(p => (
                 <button
                   key={p.value}

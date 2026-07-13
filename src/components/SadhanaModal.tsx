@@ -155,7 +155,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
       <div className="glass-modal w-full max-w-lg rounded-lg overflow-hidden shadow-2xl animate-slide-up flex flex-col max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="flex justify-between items-center p-5 border-b border-white/[0.08] bg-white/[0.02]">
+        <div className="flex justify-between items-center p-4 sm:p-5 border-b border-white/[0.08] bg-white/[0.02]">
           <div>
             <h3 className="text-lg md:text-xl font-serif text-white font-semibold">
               Daily Sadhana Journal
@@ -173,7 +173,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-grow">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-6 flex-grow">
           {/* Sadhana Checklist */}
           <div className="space-y-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -236,7 +236,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                               {getPresetIcon(s.colorPreset)}
                             </div>
                             <div>
-                              <div className="text-sm font-semibold text-white flex items-center gap-2">
+                              <div className="text-sm font-semibold text-white flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2">
                                 {s.name}
                                 {s.sanskritName && (
                                   <span className="text-[10px] font-normal text-slate-500 font-serif">
@@ -268,7 +268,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                               <div className="text-[10px] text-slate-500 font-medium bg-purple-500/5 border border-purple-500/15 rounded-lg px-3 py-1.5 text-center">
                                 🙿 1 Mala = {MALA_REPS} Repetitions &mdash; both adjusters sync automatically
                               </div>
-                              <div className="flex gap-2">
+                              <div className="flex flex-col sm:flex-row gap-2">
                                 {/* Malas Adjuster */}
                                 <div className="flex-1 flex items-center justify-between py-1 px-2 bg-purple-500/5 rounded-lg border border-purple-500/20">
                                   <span className="text-[10px] text-purple-300 font-semibold">Malas</span>
@@ -278,7 +278,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                         const cur = counts[s.id] ?? MALA_REPS;
                                         setCounts(prev => ({ ...prev, [s.id]: Math.max(0, cur - MALA_REPS) }));
                                       }}
-                                      className="w-6 h-6 rounded bg-purple-500/10 hover:bg-purple-500/25 flex items-center justify-center text-purple-300 hover:text-white transition-colors"
+                                      className="w-8 h-8 rounded bg-purple-500/10 hover:bg-purple-500/25 flex items-center justify-center text-purple-300 hover:text-white transition-colors shrink-0"
                                       type="button"
                                     >
                                       <Minus className="w-3.5 h-3.5" />
@@ -291,7 +291,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                         const cur = counts[s.id] ?? MALA_REPS;
                                         setCounts(prev => ({ ...prev, [s.id]: cur + MALA_REPS }));
                                       }}
-                                      className="w-6 h-6 rounded bg-purple-500/10 hover:bg-purple-500/25 flex items-center justify-center text-purple-300 hover:text-white transition-colors"
+                                      className="w-8 h-8 rounded bg-purple-500/10 hover:bg-purple-500/25 flex items-center justify-center text-purple-300 hover:text-white transition-colors shrink-0"
                                       type="button"
                                     >
                                       <Plus className="w-3.5 h-3.5" />
@@ -308,7 +308,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                         const cur = counts[s.id] ?? MALA_REPS;
                                         setCounts(prev => ({ ...prev, [s.id]: Math.max(0, cur - 1) }));
                                       }}
-                                      className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                      className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors shrink-0"
                                       type="button"
                                     >
                                       <Minus className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                         const cur = counts[s.id] ?? MALA_REPS;
                                         setCounts(prev => ({ ...prev, [s.id]: cur + 1 }));
                                       }}
-                                      className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                      className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors shrink-0"
                                       type="button"
                                     >
                                       <Plus className="w-3.5 h-3.5" />
@@ -351,7 +351,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                               <div className="flex items-center gap-3">
                                 <button
                                   onClick={() => handleDecrement(s.id)}
-                                  className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                  className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors shrink-0"
                                   type="button"
                                 >
                                   <Minus className="w-3.5 h-3.5" />
@@ -368,7 +368,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                 />
                                 <button
                                   onClick={() => handleIncrement(s.id)}
-                                  className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                                  className="w-8 h-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors shrink-0"
                                   type="button"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
@@ -404,7 +404,7 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-5 border-t border-white/[0.08] bg-white/[0.01] flex justify-between items-center gap-3">
+        <div className="p-4 sm:p-5 border-t border-white/[0.08] bg-white/[0.01] flex justify-between items-center gap-3">
           {log ? (
             <button
               onClick={handleDelete}

@@ -83,7 +83,7 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
           key={`day-${day}`}
           onClick={() => handleDayClick(day)}
           className={`
-            aspect-square relative p-2 flex flex-col justify-between items-center rounded-lg border transition-all duration-200 group
+            aspect-square relative p-1 sm:p-2 flex flex-col justify-between items-center rounded-lg border transition-all duration-200 group
             ${isSelected 
               ? 'border-sadhana-gold-accent bg-sadhana-cardHover text-white scale-[1.01] z-10' 
               : isToday
@@ -96,7 +96,7 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
           {/* Day number & indicators */}
           <div className="w-full flex justify-between items-start">
             <span className={`
-              text-xs md:text-sm font-serif rounded-md w-5 h-5 flex items-center justify-center transition-colors
+              text-[10px] sm:text-xs md:text-sm font-serif rounded-md w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center transition-colors
               ${isToday ? 'bg-sadhana-gold text-black font-bold' : ''}
               ${isSelected && !isToday ? 'text-sadhana-gold-accent font-bold' : ''}
             `}>
@@ -143,10 +143,10 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
   };
 
   return (
-    <div className="glass-panel rounded-lg p-4 md:p-6 shadow-md relative overflow-hidden flex flex-col">
+    <div className="glass-panel rounded-lg p-3 sm:p-4 md:p-6 shadow-md relative overflow-hidden flex flex-col">
       
       {/* Calendar Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-sadhana-card border border-white/5 flex items-center justify-center text-sadhana-gold-accent">
             <CalendarDays className="w-4 h-4" />
@@ -184,7 +184,7 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
       </div>
  
       {/* Week Days Header */}
-      <div className="grid grid-cols-7 gap-2 mb-2 text-center border-b border-white/[0.03] pb-1">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center border-b border-white/[0.03] pb-1">
         {daysOfWeek.map(day => (
           <div key={day} className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase py-1 font-sans">
             {day}
@@ -193,7 +193,7 @@ export const Calendar: React.FC<CalendarProps> = ({ logs, sadhanas, selectedDate
       </div>
  
       {/* Grid Days */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {renderCells()}
       </div>
     </div>

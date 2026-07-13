@@ -452,7 +452,7 @@ function App() {
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'dashboard'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -466,7 +466,7 @@ function App() {
           <button
             onClick={() => setActiveTab('vows')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'vows'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -480,7 +480,7 @@ function App() {
           <button
             onClick={() => setActiveTab('practices')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'practices'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -494,7 +494,7 @@ function App() {
           <button
             onClick={() => setActiveTab('settings')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1.5 py-1.5 px-4 text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'settings'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -507,7 +507,7 @@ function App() {
         </nav>
 
         {/* Right Side: Account status/Sync actions */}
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end text-[10px] font-sans text-slate-400 shrink-0">
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end text-[10px] font-sans text-slate-400 shrink-0">
           {isCloudSyncing ? (
             <div className="flex items-center gap-1.5 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
               <Loader2 className="w-3 h-3 animate-spin text-sadhana-gold-accent" />
