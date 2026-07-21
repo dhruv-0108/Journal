@@ -312,6 +312,13 @@ function App() {
     }));
   };
 
+  const handleUpdateSankalp = (id: string, updatedData: Partial<Sankalp>) => {
+    updateStore(prev => ({
+      ...prev,
+      sankalps: prev.sankalps.map(s => s.id === id ? { ...s, ...updatedData } : s)
+    }));
+  };
+
   const handleDeleteSankalp = (id: string) => {
     updateStore(prev => ({
       ...prev,
@@ -618,6 +625,7 @@ function App() {
               sadhanas={displaySadhanas}
               logs={store.logs}
               onAdd={handleAddSankalp}
+              onUpdate={handleUpdateSankalp}
               onUpdateStatus={handleUpdateSankalpStatus}
               onDelete={handleDeleteSankalp}
               onRetry={handleRetrySankalp}
