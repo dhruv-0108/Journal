@@ -37,6 +37,8 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
   const [editDateVal, setEditDateVal] = useState<string>('');
 
   // ── Core fields ──────────────────────────────────────────────────────────
+  const [selectedSadhanaId, setSelectedSadhanaId] = useState<string>(sadhanas[0]?.id || 'new');
+  const [customPracticeName, setCustomPracticeName] = useState<string>('');
   const [title, setTitle]       = useState('');
   const [startDate, setStartDate] = useState(formatDateString(new Date()));
   const [practiceType, setPracticeType] = useState<'stotra' | 'mantra'>('stotra');
@@ -108,8 +110,11 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
 
   // ── Reset form ────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
+    const defaultS = sadhanas[0];
+    setSelectedSadhanaId(defaultS?.id || 'new');
+    setCustomPracticeName(defaultS ? '' : '');
     setTitle(''); setGoalStr(''); setGoalUnit('mala');
-    setPracticeType('stotra');
+    setPracticeType(defaultS?.countType === 'mala' ? 'mantra' : 'stotra');
     setStartDate(formatDateString(new Date()));
     setCalcSub('calc-days');
     setCapacityStr(''); setCapUnit('mala'); setModeBDaysStr('41');
@@ -140,9 +145,13 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
     // Store raw reps internally
     const rawTargetCount = isMalaType ? finalDailyMalas * MALA_REPS : finalDailyMalas;
 
+    const targetPracticeName = selectedSadhanaId === 'new' 
+      ? (customPracticeName.trim() || title.trim())
+      : (sadhanas.find(s => s.id === selectedSadhanaId)?.name || title.trim());
+
     onAdd({
       title: title.trim(),
-      practiceName: title.trim(),
+      practiceName: targetPracticeName,
       practiceType,
       targetCount: rawTargetCount,
       durationDays: finalDuration,
@@ -254,16 +263,61 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="col-span-1 md:col-span-2">
-              <label className={labelCls}>Vow Title / Sadhana Name</label>
+              <label className={labelCls}>Vow Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="e.g. 41-Day Surya Upasna, Hanuman Chalisa Vow"
+                placeholder="e.g. 41-Day Surya Upasna, 1.25 Lakh Navarna Mantra Vow"
                 required
                 className={`${inputCls} font-sans`}
               />
             </div>
+
+            <div>
+              <label className={labelCls}>Target Practice</label>
+              <select
+                value={selectedSadhanaId}
+                onChange={e => {
+                  const sId = e.target.value;
+                  setSelectedSadhanaId(sId);
+                  if (sId !== 'new') {
+                    const chosen = sadhanas.find(s => s.id === sId);
+                    if (chosen) {
+                      setPracticeType(chosen.countType === 'mala' ? 'mantra' : 'stotra');
+                      setCustomPracticeName(chosen.name);
+                    }
+                  } else {
+                    setCustomPracticeName('');
+                  }
+                }}
+                className={`${inputCls} font-sans bg-sadhana-dark`}
+              >
+                {sadhanas.map(s => (
+                  <option key={s.id} value={s.id} className="bg-sadhana-dark text-white">
+                    {s.name} ({s.countType === 'mala' ? 'Mantra / Mala' : 'Stotra / Reps'})
+                  </option>
+                ))}
+                <option value="new" className="bg-sadhana-dark text-sadhana-gold">
+                  + Create Custom New Practice
+                </option>
+              </select>
+            </div>
+
+            {selectedSadhanaId === 'new' && (
+              <div>
+                <label className={labelCls}>New Practice Name</label>
+                <input
+                  type="text"
+                  value={customPracticeName}
+                  onChange={e => setCustomPracticeName(e.target.value)}
+                  placeholder="e.g. Durga Saptashati"
+                  required
+                  className={`${inputCls} font-sans`}
+                />
+              </div>
+            )}
+
             <div>
               <label className={labelCls}>Practice Type</label>
               <div className="flex gap-1.5">
