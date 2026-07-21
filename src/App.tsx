@@ -97,15 +97,6 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Real-time Direct Cloud Sync: Whenever store changes while signed in, write directly to cloud database
-  useEffect(() => {
-    if (currentUser && !isCloudSyncing) {
-      saveUserStoreToFirestore(currentUser.uid, store).catch(err => {
-        console.error('Direct cloud database write failed:', err);
-      });
-    }
-  }, [store, currentUser, isCloudSyncing]);
-
   // Sync username edit input with store
   useEffect(() => {
     if (store.username) {
