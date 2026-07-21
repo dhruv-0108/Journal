@@ -637,18 +637,25 @@ function App() {
           </div>
         )}
 
-        {/* Tab 3: Practice Stats */}
+        {/* Tab 3: Practice Stats & Custom Practice Management */}
         {activeTab === 'practices' && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in space-y-6">
             <PracticeStats
               sadhanas={displaySadhanas}
               logs={store.logs}
               sankalps={store.sankalps}
             />
+            <SadhanaManager
+              sadhanas={displaySadhanas}
+              onAdd={handleAddSadhana}
+              onUpdate={handleUpdateSadhana}
+              onDelete={handleDeleteSadhana}
+              isReferencedInSankalp={isReferencedInSankalp}
+            />
           </div>
         )}
 
-        {/* Tab 3: Dynamic Sadhanas Settings */}
+        {/* Tab 4: Account & Data Settings */}
         {activeTab === 'settings' && (
           <div className="animate-fade-in space-y-6">
             {/* Premium Profile & Account Settings Card */}
@@ -769,14 +776,6 @@ function App() {
               </div>
 
             </div>
-
-            <SadhanaManager
-              sadhanas={displaySadhanas}
-              onAdd={handleAddSadhana}
-              onUpdate={handleUpdateSadhana}
-              onDelete={handleDeleteSadhana}
-              isReferencedInSankalp={isReferencedInSankalp}
-            />
           </div>
         )}
 
