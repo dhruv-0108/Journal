@@ -243,6 +243,7 @@ function App() {
       return {
         ...prev,
         sadhanas: prev.sadhanas.filter(s => s.id !== id),
+        sankalps: prev.sankalps.filter(s => s.sadhanaId !== id),
         logs: updatedLogs
       };
     });

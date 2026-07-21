@@ -96,12 +96,12 @@ export const SadhanaManager: React.FC<SadhanaManagerProps> = ({
   };
 
   const handleDelete = (id: string, name: string) => {
-    if (isReferencedInSankalp(id)) {
-      alert(`Cannot delete "${name}" because it is currently linked to an active or completed Sankalp vow. Delete the Sankalp first.`);
-      return;
-    }
+    const isLinked = isReferencedInSankalp(id);
+    const msg = isLinked 
+      ? `Are you sure you want to delete "${name}"? This will also remove any linked Sankalp vows and associated daily logs.`
+      : `Are you sure you want to delete "${name}"? All previous daily logs for this practice will be removed.`;
 
-    if (confirm(`Are you sure you want to delete "${name}"? All previous daily logs for this practice will be removed from display.`)) {
+    if (confirm(msg)) {
       onDelete(id);
     }
   };
