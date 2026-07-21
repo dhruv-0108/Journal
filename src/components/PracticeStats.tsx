@@ -54,7 +54,7 @@ const PracticeCard: React.FC<{
     allDates.forEach(dateStr => {
       const log = logs[dateStr];
       const did = log.completed[sadhana.id] === true;
-      if (log.counts[sadhana.id] !== undefined) {
+      if (did && log.counts[sadhana.id] !== undefined) {
         totalReps += log.counts[sadhana.id];
       }
       if (did) {

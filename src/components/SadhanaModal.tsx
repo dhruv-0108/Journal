@@ -139,8 +139,9 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
     const cleanCounts: Record<string, number> = {};
 
     sadhanas.forEach(s => {
-      cleanCompleted[s.id] = completed[s.id] || false;
-      cleanCounts[s.id] = counts[s.id] ?? s.defaultCount ?? 1;
+      const isDone = completed[s.id] || false;
+      cleanCompleted[s.id] = isDone;
+      cleanCounts[s.id] = isDone ? (counts[s.id] ?? s.defaultCount ?? 1) : 0;
     });
 
     onSave(dateKey, {
