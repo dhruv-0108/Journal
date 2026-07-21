@@ -31,14 +31,10 @@ type DailyUnit  = 'mala' | 'reps';        // only relevant for mala-type practic
 type CalcSub    = 'calc-days' | 'calc-daily';
 
 export const SankalpManager: React.FC<SankalpManagerProps> = ({
-  sankalps, sadhanas, logs, onAdd, onUpdate, onUpdateStatus, onDelete, onRetry, onUpdateStartDate
+  sankalps, sadhanas, logs, onAdd, onUpdate, onUpdateStatus, onDelete, onRetry
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSankalpId, setEditingSankalpId] = useState<string | null>(null);
-  const [editVowTitle, setEditVowTitle] = useState('');
-  const [editVowStartDate, setEditVowStartDate] = useState('');
-  const [editVowDuration, setEditVowDuration] = useState(41);
-  const [editVowTarget, setEditVowTarget] = useState(1);
 
   // ── Core fields ──────────────────────────────────────────────────────────
   const [selectedSadhanaId, setSelectedSadhanaId] = useState<string>(sadhanas[0]?.id || 'new');
@@ -114,14 +110,36 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
 
   // ── Reset form ────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
+    setEditingSankalpId(null);
     const defaultS = sadhanas[0];
     setSelectedSadhanaId(defaultS?.id || 'new');
-    setCustomPracticeName(defaultS ? '' : '');
+    setCustomPracticeName('');
     setTitle(''); setGoalStr(''); setGoalUnit('mala');
     setPracticeType(defaultS?.countType === 'mala' ? 'mantra' : 'stotra');
     setStartDate(formatDateString(new Date()));
     setCalcSub('calc-days');
     setCapacityStr(''); setCapUnit('mala'); setModeBDaysStr('41');
+    setIsFormOpen(true);
+  };
+
+  const handleOpenEditVow = (s: Sankalp) => {
+    setEditingSankalpId(s.id);
+    setTitle(s.title);
+    setStartDate(s.startDate);
+    setSelectedSadhanaId(s.sadhanaId);
+
+    const config = sadhanas.find(sad => sad.id === s.sadhanaId);
+    const isMala = config ? config.countType === 'mala' : false;
+    setPracticeType(isMala ? 'mantra' : 'stotra');
+
+    const totalReps = s.targetCount * s.durationDays;
+    const totalGoal = isMala ? Math.round(totalReps / MALA_REPS) : totalReps;
+    setGoalStr(totalGoal.toString());
+    setGoalUnit('mala');
+
+    setCalcSub('calc-daily');
+    setModeBDaysStr(s.durationDays.toString());
+
     setIsFormOpen(true);
   };
 
@@ -153,14 +171,28 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
       ? (customPracticeName.trim() || title.trim())
       : (sadhanas.find(s => s.id === selectedSadhanaId)?.name || title.trim());
 
-    onAdd({
-      title: title.trim(),
-      practiceName: targetPracticeName,
-      practiceType,
-      targetCount: rawTargetCount,
-      durationDays: finalDuration,
-      startDate
-    });
+    if (editingSankalpId) {
+      if (onUpdate) {
+        onUpdate(editingSankalpId, {
+          title: title.trim(),
+          sadhanaId: selectedSadhanaId !== 'new' ? selectedSadhanaId : undefined,
+          targetCount: rawTargetCount,
+          durationDays: finalDuration,
+          startDate
+        });
+      }
+      setEditingSankalpId(null);
+    } else {
+      onAdd({
+        title: title.trim(),
+        practiceName: targetPracticeName,
+        practiceType,
+        targetCount: rawTargetCount,
+        durationDays: finalDuration,
+        startDate
+      });
+    }
+
     setIsFormOpen(false);
   };
 
@@ -178,28 +210,6 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
       targetCount: retryTarget || s.targetCount
     });
     setRetryingSankalpId(null);
-  };
-
-  const handleOpenEditVow = (s: Sankalp) => {
-    setEditingSankalpId(s.id);
-    setEditVowTitle(s.title);
-    setEditVowStartDate(s.startDate);
-    setEditVowDuration(s.durationDays);
-    setEditVowTarget(s.targetCount);
-  };
-
-  const handleSaveEditVow = (s: Sankalp) => {
-    if (onUpdate) {
-      onUpdate(s.id, {
-        title: editVowTitle.trim() || s.title,
-        startDate: editVowStartDate || s.startDate,
-        durationDays: editVowDuration > 0 ? editVowDuration : s.durationDays,
-        targetCount: editVowTarget > 0 ? editVowTarget : s.targetCount
-      });
-    } else if (onUpdateStartDate) {
-      onUpdateStartDate(s.id, editVowStartDate);
-    }
-    setEditingSankalpId(null);
   };
 
   const getSadhanaName   = (id: string) => sadhanas.find(s => s.id === id)?.name ?? 'Unknown Practice';
@@ -277,7 +287,9 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
 
           {/* Form header */}
           <div className="flex justify-between items-center pb-2 border-b border-white/[0.05]">
-            <h3 className="text-sm font-serif font-bold text-sadhana-gold">Resolve a New Sadhana Vow</h3>
+            <h3 className="text-sm font-serif font-bold text-sadhana-gold">
+              {editingSankalpId ? `Edit Sadhana Vow — ${title || 'Resolution'}` : 'Resolve a New Sadhana Vow'}
+            </h3>
             <button type="button" onClick={() => setIsFormOpen(false)} className="text-slate-500 hover:text-white">
               <X className="w-4 h-4" />
             </button>
@@ -640,7 +652,7 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
             <button type="submit"
               className="px-5 py-2 text-xs font-semibold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-xl font-sans flex items-center gap-1 shadow-lg shadow-sadhana-gold/10">
               <Sparkles className="w-3.5 h-3.5 fill-black/20" />
-              Begin Sacred Vow
+              {editingSankalpId ? 'Save Vow Changes' : 'Begin Sacred Vow'}
             </button>
           </div>
         </form>
@@ -773,72 +785,6 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                           >
                             <Edit2 className="w-3 h-3" />
                             Edit Details
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Full Inline Vow Details & Date Editor */}
-                    {editingSankalpId === s.id && (
-                      <div className="p-4 bg-white/[0.02] border border-sadhana-gold/30 rounded-xl space-y-3 animate-fade-in">
-                        <div className="flex justify-between items-center text-xs font-semibold text-sadhana-gold border-b border-white/5 pb-2">
-                          <span>Edit Vow Details ({s.title})</span>
-                          <button onClick={() => setEditingSankalpId(null)} className="text-slate-500 hover:text-white">
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="col-span-1 sm:col-span-2">
-                            <label className="text-[10px] font-semibold text-slate-400 block mb-1">Vow Title</label>
-                            <input
-                              type="text"
-                              value={editVowTitle}
-                              onChange={e => setEditVowTitle(e.target.value)}
-                              className="w-full bg-sadhana-dark border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sadhana-gold/50 font-sans"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] font-semibold text-slate-400 block mb-1">Start Date</label>
-                            <input
-                              type="date"
-                              value={editVowStartDate}
-                              onChange={e => setEditVowStartDate(e.target.value)}
-                              className="w-full bg-sadhana-dark border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sadhana-gold/50 font-mono"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] font-semibold text-slate-400 block mb-1">Duration (Days)</label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={editVowDuration}
-                              onChange={e => setEditVowDuration(parseInt(e.target.value, 10) || 1)}
-                              className="w-full bg-sadhana-dark border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sadhana-gold/50 font-mono"
-                            />
-                          </div>
-                          <div className="col-span-1 sm:col-span-2">
-                            <label className="text-[10px] font-semibold text-slate-400 block mb-1">Daily Target Count (Reps)</label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={editVowTarget}
-                              onChange={e => setEditVowTarget(parseInt(e.target.value, 10) || 1)}
-                              className="w-full bg-sadhana-dark border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sadhana-gold/50 font-mono"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
-                          <button
-                            onClick={() => setEditingSankalpId(null)}
-                            className="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => handleSaveEditVow(s)}
-                            className="px-4 py-1.5 text-xs font-bold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-lg transition-colors"
-                          >
-                            Save Vow Changes
                           </button>
                         </div>
                       </div>
