@@ -251,6 +251,111 @@ export const getSankalpProgress = (sankalp: Sankalp, logs: SadhanaLogs): Sankalp
   };
 };
 
+/**
+ * Evaluates active sankalps whose duration has passed.
+ * Automatically marks them 'completed' (if target days met) or 'abandoned' (if missed days).
+ * Archives the uncompleted/completed attempt into `sankalp.attempts`.
+ */
+export const autoEvaluateExpiredSankalps = (
+  sankalps: Sankalp[],
+  logs: SadhanaLogs
+): { updatedSankalps: Sankalp[]; changed: boolean } => {
+  const todayStr = formatDateString(new Date());
+  let changed = false;
+
+  const updatedSankalps = sankalps.map(s => {
+    if (s.status !== 'active') return s;
+
+    const vowEndDate = getOffsetDateString(s.startDate, s.durationDays - 1);
+    if (todayStr > vowEndDate) {
+      changed = true;
+      const prog = getSankalpProgress(s, logs);
+      const isCompleted = prog.daysCompleted >= prog.daysTotal;
+      const status: 'completed' | 'abandoned' = isCompleted ? 'completed' : 'abandoned';
+
+      const newAttempt = {
+        id: `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        startDate: s.startDate,
+        durationDays: s.durationDays,
+        targetCount: s.targetCount,
+        status,
+        daysCompleted: prog.daysCompleted
+      };
+      const existingAttempts = s.attempts || [];
+
+      return {
+        ...s,
+        status,
+        attempts: [...existingAttempts, newAttempt]
+      };
+    }
+
+    return s;
+  });
+
+  return { updatedSankalps, changed };
+};
+
+/**
+ * Auto-checks and restarts sankalps if a practice is logged on a date past their scheduled end date,
+ * or if a practice is logged for an abandoned vow from calendar.
+ * Sets `sankalp.status = 'active'` and `sankalp.startDate = dateStr`.
+ */
+export const autoRestartSankalpsOnLog = (
+  sankalps: Sankalp[],
+  logs: SadhanaLogs,
+  dateStr: string,
+  completedSadhanaIds: string[]
+): { updatedSankalps: Sankalp[]; changed: boolean } => {
+  if (!completedSadhanaIds.length) return { updatedSankalps: sankalps, changed: false };
+
+  let changed = false;
+  const updatedSankalps = sankalps.map(s => {
+    if (!completedSadhanaIds.includes(s.sadhanaId)) {
+      return s;
+    }
+
+    const vowEndDate = getOffsetDateString(s.startDate, s.durationDays - 1);
+
+    // Case 1: Active vow where logging date is past the end date (dateStr > vowEndDate)
+    if (s.status === 'active' && dateStr > vowEndDate) {
+      changed = true;
+      const prog = getSankalpProgress(s, logs);
+      const newAttempt = {
+        id: `attempt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        startDate: s.startDate,
+        durationDays: s.durationDays,
+        targetCount: s.targetCount,
+        status: 'abandoned' as const,
+        daysCompleted: prog.daysCompleted
+      };
+      const existingAttempts = s.attempts || [];
+
+      return {
+        ...s,
+        startDate: dateStr,
+        status: 'active' as const,
+        attempts: [...existingAttempts, newAttempt]
+      };
+    }
+
+    // Case 2: Vow is abandoned and user logs a practice for this sadhana again from calendar
+    if (s.status === 'abandoned') {
+      changed = true;
+      return {
+        ...s,
+        startDate: dateStr,
+        status: 'active' as const
+      };
+    }
+
+    return s;
+  });
+
+  return { updatedSankalps, changed };
+};
+
+
 export const calculateDashboardStats = (
   sadhanas: SadhanaConfig[], 
   logs: SadhanaLogs

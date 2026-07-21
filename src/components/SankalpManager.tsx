@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, X, Calendar, Sparkles, Trash2, Target, RotateCcw } from 'lucide-react';
+import { Plus, X, Calendar, Sparkles, Trash2, Target, RotateCcw, Edit2, AlertTriangle } from 'lucide-react';
 import type { Sankalp, SadhanaConfig, SadhanaLogs } from '../types';
 import { getSankalpProgress, formatDateString, MALA_REPS, formatSadhanaCount, getOffsetDateString } from '../sadhanaUtils';
 
@@ -22,6 +22,7 @@ interface SankalpManagerProps {
     durationDays: number;
     targetCount: number;
   }) => void;
+  onUpdateStartDate?: (id: string, newStartDate: string) => void;
 }
 
 type GoalUnit   = 'mala' | 'reps';        // only relevant for mala-type practices
@@ -29,9 +30,11 @@ type DailyUnit  = 'mala' | 'reps';        // only relevant for mala-type practic
 type CalcSub    = 'calc-days' | 'calc-daily';
 
 export const SankalpManager: React.FC<SankalpManagerProps> = ({
-  sankalps, sadhanas, logs, onAdd, onUpdateStatus, onDelete, onRetry
+  sankalps, sadhanas, logs, onAdd, onUpdateStatus, onDelete, onRetry, onUpdateStartDate
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingDateSankalpId, setEditingDateSankalpId] = useState<string | null>(null);
+  const [editDateVal, setEditDateVal] = useState<string>('');
 
   // ── Core fields ──────────────────────────────────────────────────────────
   const [title, setTitle]       = useState('');
@@ -571,6 +574,10 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
             {activeSankalps.map(s => {
               const prog = getSankalpProgress(s, logs);
               const isRetrying = retryingSankalpId === s.id;
+              const todayStr = formatDateString(new Date());
+              const vowEndDate = getOffsetDateString(s.startDate, s.durationDays - 1);
+              const isExpired = todayStr > vowEndDate && prog.daysCompleted < prog.daysTotal;
+              const isEditingDate = editingDateSankalpId === s.id;
 
               if (isRetrying) {
                 return (
@@ -639,6 +646,12 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                           className="px-2 py-1 text-[9px] font-bold text-slate-400 hover:text-rose-400 bg-white/5 hover:bg-rose-950/20 border border-white/10 hover:border-rose-900/20 rounded-md transition-colors">
                           Abandon
                         </button>
+                        <button onClick={() => { setEditingDateSankalpId(s.id); setEditDateVal(s.startDate); }}
+                          className="px-2 py-1 text-[9px] font-bold text-slate-300 hover:text-white bg-white/5 hover:bg-white/15 border border-white/10 rounded-md transition-colors flex items-center gap-0.5"
+                          title="Change Vow Start Date">
+                          <Edit2 className="w-2.5 h-2.5" />
+                          Edit Date
+                        </button>
                         <button onClick={() => handleStartRetryClick(s)}
                           className="px-2 py-1 text-[9px] font-bold text-sadhana-gold bg-sadhana-gold/10 hover:bg-sadhana-gold/25 border border-sadhana-gold/20 rounded-md transition-colors flex items-center gap-0.5">
                           <RotateCcw className="w-2.5 h-2.5" />
@@ -646,6 +659,78 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                         </button>
                       </div>
                     </div>
+
+                    {/* Expired Vow Notice Banner */}
+                    {isExpired && !isEditingDate && (
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                        <div className="flex items-start gap-2 text-amber-300">
+                          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                          <div>
+                            <p className="font-semibold">Vow Period Ended ({vowEndDate})</p>
+                            <p className="text-[10px] text-amber-300/80">Timeframe elapsed with missed days. You can restart or change start date.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                          <button
+                            onClick={() => onRetry(s.id, { startDate: todayStr, durationDays: s.durationDays, targetCount: s.targetCount })}
+                            className="px-2.5 py-1.5 text-[10px] font-bold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-lg transition-all flex items-center gap-1 shadow"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            Restart Today
+                          </button>
+                          <button
+                            onClick={() => { setEditingDateSankalpId(s.id); setEditDateVal(s.startDate); }}
+                            className="px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                            Edit Date
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inline Start Date Editor */}
+                    {isEditingDate && (
+                      <div className="p-3 bg-white/[0.02] border border-sadhana-gold/30 rounded-xl space-y-2 animate-fade-in">
+                        <div className="flex justify-between items-center text-xs font-semibold text-sadhana-gold">
+                          <span>Update Start Date for Vow</span>
+                          <button onClick={() => setEditingDateSankalpId(null)} className="text-slate-500 hover:text-white">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                          <input
+                            type="date"
+                            value={editDateVal}
+                            onChange={e => setEditDateVal(e.target.value)}
+                            className="flex-1 bg-sadhana-dark border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-sadhana-gold/50 font-mono"
+                          />
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={() => {
+                                if (editDateVal && onUpdateStartDate) {
+                                  onUpdateStartDate(s.id, editDateVal);
+                                }
+                                setEditingDateSankalpId(null);
+                              }}
+                              className="px-3 py-1.5 text-xs font-bold text-black bg-sadhana-gold hover:bg-sadhana-gold/90 rounded-lg transition-colors"
+                            >
+                              Save Date
+                            </button>
+                            <button
+                              onClick={() => setEditingDateSankalpId(null)}
+                              className="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-500">
+                          Shifting the start date will recalculate your progress starting from the new date.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-baseline text-xs">
                         <span className="text-slate-400">Resolution Progress</span>
@@ -668,13 +753,33 @@ export const SankalpManager: React.FC<SankalpManagerProps> = ({
                       <div className="flex flex-wrap gap-1 py-1">
                         {prog.timelineDays.map((day, idx) => {
                           let dotStyle = 'bg-white/[0.04] border-white/[0.05]';
-                          let timelineTitle = `Day ${idx + 1} (${day.dateStr}): Unlogged / Future`;
-                          if (day.logged) {
-                            if (day.success) { dotStyle = 'bg-[#10b981] border-[#10b981]/20 shadow-[0_0_5px_rgba(16,185,129,0.3)] scale-[1.05]'; timelineTitle = `Day ${idx + 1}: Met target!`; }
-                            else { dotStyle = 'bg-rose-600/70 border-rose-600/30'; timelineTitle = `Day ${idx + 1}: Logged but missed target`; }
+                          let timelineTitle = `Day ${idx + 1} (${day.dateStr}): Future`;
+
+                          if (day.success) {
+                            dotStyle = 'bg-[#10b981] border-[#10b981]/20 shadow-[0_0_5px_rgba(16,185,129,0.3)] scale-[1.05]';
+                            timelineTitle = `Day ${idx + 1} (${day.dateStr}): Met target!`;
+                          } else if (day.dateStr < todayStr) {
+                            // Any past day in the vow where target was not met is a missed day (red)
+                            dotStyle = 'bg-rose-600/80 border-rose-600/40 shadow-[0_0_4px_rgba(225,29,72,0.2)]';
+                            timelineTitle = `Day ${idx + 1} (${day.dateStr}): Missed day`;
+                          } else if (day.dateStr === todayStr) {
+                            if (day.logged) {
+                              dotStyle = 'bg-rose-600/80 border-rose-600/40';
+                              timelineTitle = `Day ${idx + 1} (${day.dateStr}): Logged but missed target`;
+                            } else {
+                              dotStyle = 'bg-sadhana-gold/20 border-sadhana-gold/50 animate-pulse';
+                              timelineTitle = `Day ${idx + 1} (${day.dateStr}): Today (Pending)`;
+                            }
                           }
+
                           return <span key={day.dateStr} className={`w-3.5 h-3.5 rounded border transition-all duration-300 ${dotStyle}`} title={timelineTitle} />;
                         })}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 pt-1 text-[9px] text-slate-500">
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#10b981]" /> Completed</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-rose-600/80" /> Missed</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-sadhana-gold/20 border border-sadhana-gold/50" /> Today</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-white/[0.04] border border-white/[0.1]" /> Future</span>
                       </div>
                     </div>
                   </div>

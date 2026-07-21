@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, AlertCircle, Loader2, ArrowRight, User, Mail, Lock } from 'lucide-react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
 import { auth } from '../firebase';
 
 interface AuthPageProps {
@@ -20,6 +20,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [guestName, setGuestName] = useState(currentGuestName);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,10 +51,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setIsLoading(true);
 
     try {
+      if (rememberMe) {
+        await setPersistence(auth, browserLocalPersistence);
+        localStorage.setItem('sadhana_remember_me', 'true');
+      } else {
+        await setPersistence(auth, browserSessionPersistence);
+        localStorage.setItem('sadhana_remember_me', 'false');
+        localStorage.setItem('sadhana_auth_timestamp', Date.now().toString());
+      }
+
       if (mode === 'register') {
         // Sign up
         await createUserWithEmailAndPassword(auth, email.trim(), password.trim());
-        // Pass username back so we initialize Firestore with it
         onSuccess(name.trim());
       } else {
         // Sign in
@@ -209,6 +218,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     />
                   </div>
                 </div>
+
+                {mode === 'signin' && (
+                  <div className="pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={e => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 rounded border-white/20 bg-black/40 text-sadhana-gold focus:ring-sadhana-gold/50 cursor-pointer accent-sadhana-gold"
+                      />
+                      <span>Remember me for quick sign-in</span>
+                    </label>
+                  </div>
+                )}
               </>
             ) : (
               <div className="space-y-1.5">

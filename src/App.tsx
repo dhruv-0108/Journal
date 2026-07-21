@@ -6,8 +6,8 @@ import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
 import { PracticeStats } from './components/PracticeStats';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
-import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress } from './sadhanaUtils';
-import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3 } from 'lucide-react';
+import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps, generateMockStoreData } from './sadhanaUtils';
+import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, RotateCcw } from 'lucide-react';
 
 // Firebase imports
 import { auth } from './firebase';
@@ -43,30 +43,63 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
+        setShowAuthPage(false);
         setIsCloudSyncing(true);
-        // Load whatever exists in local storage
-        const localStore = loadStore();
-        // Fetch from Firestore cloud
-        const cloudStore = await loadUserStoreFromFirestore(user.uid);
-        
-        let finalStore = localStore;
-        if (cloudStore) {
-          // Merge local logs/sadhanas with cloud backup so no offline logs are lost
-          finalStore = mergeStores(localStore, cloudStore);
+        try {
+          // Fetch user document directly from Cloud Database
+          const cloudStore = await loadUserStoreFromFirestore(user.uid);
+          
+          let finalStore: SadhanaStore;
+
+          if (cloudStore !== null) {
+            // User document exists in Cloud Database: Use it as single source of truth!
+            finalStore = {
+              username: cloudStore.username || user.email?.split('@')[0] || 'Sadhaka',
+              sadhanas: (cloudStore.sadhanas && cloudStore.sadhanas.length > 0) ? cloudStore.sadhanas : DEFAULT_SADHANA_LIST,
+              sankalps: cloudStore.sankalps || [],
+              logs: cloudStore.logs || {},
+              migratedToReps: true
+            };
+          } else {
+            // New user account: Initialize cloud document
+            finalStore = {
+              username: user.email?.split('@')[0] || 'Sadhaka',
+              sadhanas: DEFAULT_SADHANA_LIST,
+              sankalps: [],
+              logs: {},
+              migratedToReps: true
+            };
+            await saveUserStoreToFirestore(user.uid, finalStore);
+          }
+
+          // Auto evaluate expired vows to 'completed' or 'abandoned'
+          const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(finalStore.sankalps, finalStore.logs);
+          if (changed) {
+            finalStore = { ...finalStore, sankalps: updatedSankalps };
+            await saveUserStoreToFirestore(user.uid, finalStore);
+          }
+          
+          setStore(finalStore);
+        } catch (err) {
+          console.error("Failed to load user document from Cloud Database:", err);
+        } finally {
+          setIsCloudSyncing(false);
         }
-        
-        setStore(finalStore);
-        saveStore(finalStore);
-        await saveUserStoreToFirestore(user.uid, finalStore);
-        setIsCloudSyncing(false);
       } else {
-        // Guest mode - load local storage
-        const loadedStore = loadStore();
-        setStore(loadedStore);
+        setIsCloudSyncing(false);
       }
     });
     return () => unsubscribe();
   }, []);
+
+  // 2. Real-time Direct Cloud Sync: Whenever store changes while signed in, write directly to cloud database
+  useEffect(() => {
+    if (currentUser && !isCloudSyncing) {
+      saveUserStoreToFirestore(currentUser.uid, store).catch(err => {
+        console.error('Direct cloud database write failed:', err);
+      });
+    }
+  }, [store, currentUser, isCloudSyncing]);
 
   // Sync username edit input with store
   useEffect(() => {
@@ -75,13 +108,15 @@ function App() {
     }
   }, [store.username]);
 
-  // Sync utilities
+  // Sync utilities: Write directly to Cloud Database and keep local cache updated
   const updateStore = (updater: (prev: SadhanaStore) => SadhanaStore) => {
     setStore(prev => {
       const updated = updater(prev);
       saveStore(updated);
       if (auth.currentUser) {
-        saveUserStoreToFirestore(auth.currentUser.uid, updated);
+        saveUserStoreToFirestore(auth.currentUser.uid, updated).catch(err => {
+          console.error('Direct cloud database write failed:', err);
+        });
       }
       return updated;
     });
@@ -99,16 +134,48 @@ function App() {
 
   // Sign out handler
   const handleSignOut = async () => {
-    if (confirm('Are you sure you want to sign out? Your data is securely saved in the cloud and will be cleared from this device for privacy.')) {
-      // Clean up local storage and state before auth state change
-      localStorage.removeItem('sadhana_journal_store_v2');
+    if (confirm('Are you sure you want to sign out? Your journal is securely saved in your cloud account.')) {
+      try {
+        if (auth.currentUser) {
+          await saveUserStoreToFirestore(auth.currentUser.uid, store);
+        }
+      } catch (e) {
+        console.error('Cloud save on signout failed:', e);
+      }
       setStore({
         username: '',
-        sadhanas: [],
+        sadhanas: DEFAULT_SADHANA_LIST,
         sankalps: [],
         logs: {}
       });
+      setShowAuthPage(true);
       await signOut(auth);
+    }
+  };
+
+  const handleManualSyncCloud = async () => {
+    if (!currentUser) return;
+    setIsCloudSyncing(true);
+    try {
+      const cloudStore = await loadUserStoreFromFirestore(currentUser.uid);
+      const localStore = loadStore();
+      const merged = mergeStores(localStore, cloudStore);
+      setStore(merged);
+      saveStore(merged);
+      await saveUserStoreToFirestore(currentUser.uid, merged);
+      alert('Cloud Sync complete! Your data has been merged & restored.');
+    } catch (err) {
+      console.error('Manual sync failed:', err);
+      alert('Failed to sync with cloud: ' + err);
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  };
+
+  const handleRestoreSampleData = () => {
+    if (confirm("Would you like to populate sample sadhana journal logs and active vows? This will load a 45-day practice history and sample Sankalp vows.")) {
+      const mock = generateMockStoreData();
+      updateStore(() => mock);
     }
   };
 
@@ -155,10 +222,6 @@ function App() {
 
   // Sadhana Handlers
   const handleAddSadhana = (newSadhana: SadhanaConfig) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     updateStore(prev => ({
       ...prev,
       sadhanas: [...prev.sadhanas, newSadhana]
@@ -166,10 +229,6 @@ function App() {
   };
 
   const handleUpdateSadhana = (updatedSadhana: SadhanaConfig) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     updateStore(prev => ({
       ...prev,
       sadhanas: prev.sadhanas.map(s => s.id === updatedSadhana.id ? updatedSadhana : s)
@@ -177,10 +236,6 @@ function App() {
   };
 
   const handleDeleteSadhana = (id: string) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     updateStore(prev => {
       const updatedLogs = { ...prev.logs };
       Object.keys(updatedLogs).forEach(dateStr => {
@@ -212,11 +267,6 @@ function App() {
     durationDays: number;
     startDate: string;
   }) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
-
     updateStore(prev => {
       // Find or create the sadhana practice config
       let existingSadhana = prev.sadhanas.find(
@@ -262,10 +312,6 @@ function App() {
   };
 
   const handleUpdateSankalpStatus = (id: string, status: 'completed' | 'abandoned') => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     updateStore(prev => ({
       ...prev,
       sankalps: prev.sankalps.map(s => s.id === id ? { ...s, status } : s)
@@ -273,10 +319,6 @@ function App() {
   };
 
   const handleDeleteSankalp = (id: string) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     updateStore(prev => ({
       ...prev,
       sankalps: prev.sankalps.filter(s => s.id !== id)
@@ -291,10 +333,6 @@ function App() {
       targetCount: number;
     }
   ) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     updateStore(prev => {
       const updatedSankalps = prev.sankalps.map(s => {
         if (s.id !== id) return s;
@@ -330,26 +368,37 @@ function App() {
     });
   };
 
-  // Daily Log Handlers
-  const handleSaveLog = (dateStr: string, logEntry: SadhanaDayLog) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
+  const handleUpdateSankalpStartDate = (id: string, newStartDate: string) => {
     updateStore(prev => ({
       ...prev,
-      logs: {
-        ...prev.logs,
-        [dateStr]: logEntry
-      }
+      sankalps: prev.sankalps.map(s => s.id === id ? { ...s, startDate: newStartDate } : s)
     }));
   };
 
+  // Daily Log Handlers
+  const handleSaveLog = (dateStr: string, logEntry: SadhanaDayLog) => {
+    updateStore(prev => {
+      const updatedLogs = {
+        ...prev.logs,
+        [dateStr]: logEntry
+      };
+
+      // Check which sadhanas were marked completed in this log entry
+      const completedIds = Object.entries(logEntry.completed)
+        .filter(([_, done]) => done === true)
+        .map(([id]) => id);
+
+      const { updatedSankalps } = autoRestartSankalpsOnLog(prev.sankalps, updatedLogs, dateStr, completedIds);
+
+      return {
+        ...prev,
+        logs: updatedLogs,
+        sankalps: updatedSankalps
+      };
+    });
+  };
+
   const handleDeleteLog = (dateStr: string) => {
-    if (!currentUser) {
-      setShowGuestGate(true);
-      return;
-    }
     updateStore(prev => {
       const updatedLogs = { ...prev.logs };
       delete updatedLogs[dateStr];
@@ -504,6 +553,15 @@ function App() {
               <span className="font-mono max-w-[120px] truncate">{currentUser.email}</span>
               <span className="text-slate-600">|</span>
               <button 
+                onClick={handleManualSyncCloud}
+                className="text-slate-400 hover:text-sadhana-gold transition-colors flex items-center gap-0.5"
+                title="Sync and restore data from cloud"
+              >
+                <Cloud className="w-3 h-3 text-sadhana-gold-accent" />
+                Sync
+              </button>
+              <span className="text-slate-600">|</span>
+              <button 
                 onClick={handleSignOut}
                 className="text-sadhana-gold-accent hover:text-white transition-colors"
               >
@@ -569,6 +627,7 @@ function App() {
               onUpdateStatus={handleUpdateSankalpStatus}
               onDelete={handleDeleteSankalp}
               onRetry={handleRetrySankalp}
+              onUpdateStartDate={handleUpdateSankalpStartDate}
             />
           </div>
         )}
@@ -687,6 +746,21 @@ function App() {
                     Save Changes
                   </button>
                 </div>
+              </div>
+
+              {/* Sample Data Restoration Block */}
+              <div className="pt-5 border-t border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-semibold text-slate-300 font-sans">Restore Sample Sadhana Data</h4>
+                  <p className="text-[10px] text-slate-500 font-sans">Populate sample practice logs, notes, and vows to explore or restore dataset.</p>
+                </div>
+                <button
+                  onClick={handleRestoreSampleData}
+                  className="px-4 py-2 text-xs font-semibold text-sadhana-gold bg-sadhana-gold/10 hover:bg-sadhana-gold/20 border border-sadhana-gold/25 rounded-xl transition-all font-sans shrink-0 flex items-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Load Sample Data
+                </button>
               </div>
 
             </div>

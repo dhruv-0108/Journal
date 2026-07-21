@@ -69,16 +69,24 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
       // Find all vows associated with this practice
       const associatedVows = sankalps.filter(v => v.sadhanaId === s.id);
       
-      // 3. If a practice is not associated with any vow, it is a daily practice by default: show daily
+      // 3. If a practice is not associated with any vow, show it
       if (associatedVows.length === 0) {
         return true;
       }
       
-      // 4. If associated with a vow, check if the clicked date falls within at least one of those vows' active ranges
-      return associatedVows.some(v => {
+      // 4. Check if there is an active vow covering dateKey
+      const hasActiveVowCoveringDate = associatedVows.some(v => {
+        if (v.status !== 'active') return false;
         const endDateStr = getOffsetDateString(v.startDate, v.durationDays - 1);
         return dateKey >= v.startDate && dateKey <= endDateStr;
       });
+      if (hasActiveVowCoveringDate) return true;
+
+      // 5. If no active vow covers dateKey (e.g. vows are abandoned/completed), still show it so user can log and auto-restart!
+      const hasNoActiveVow = !associatedVows.some(v => v.status === 'active');
+      if (hasNoActiveVow) return true;
+
+      return false;
     });
   }, [sadhanas, sankalps, dateKey, log]);
 
