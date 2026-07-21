@@ -86,6 +86,11 @@ function App() {
           setIsCloudSyncing(false);
         }
       } else {
+        const loadedStore = loadStore();
+        const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(loadedStore.sankalps || [], loadedStore.logs || {});
+        const finalStore = changed ? { ...loadedStore, sankalps: updatedSankalps } : loadedStore;
+        if (changed) saveStore(finalStore);
+        setStore(finalStore);
         setIsCloudSyncing(false);
       }
     });
