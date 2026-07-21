@@ -20,11 +20,7 @@ type TabId = 'dashboard' | 'vows' | 'practices' | 'settings';
 
 
 function App() {
-  const [store, setStore] = useState<SadhanaStore>({
-    sadhanas: DEFAULT_SADHANA_LIST,
-    sankalps: [],
-    logs: {}
-  });
+  const [store, setStore] = useState<SadhanaStore>(() => loadStore());
 
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -80,6 +76,7 @@ function App() {
           }
           
           setStore(finalStore);
+          saveStore(finalStore);
         } catch (err) {
           console.error("Failed to load user document from Cloud Database:", err);
         } finally {
