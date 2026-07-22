@@ -53,7 +53,9 @@ function App() {
         try {
           // Fetch existing user store from Cloud Database
           const cloudStore = await loadUserStoreFromFirestore(user.uid);
-          const localStore = loadStore(user.uid);
+          const guestStore = loadStore(null);
+          const userLocalStore = loadStore(user.uid);
+          const localStore = mergeStores(userLocalStore, guestStore);
           
           let finalStore: SadhanaStore;
 

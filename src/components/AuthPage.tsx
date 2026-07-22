@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, AlertCircle, Loader2, ArrowRight, User, Mail, Lock } from 'lucide-react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth } from '../firebase';
 
 interface AuthPageProps {
@@ -51,14 +51,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setIsLoading(true);
 
     try {
-      if (rememberMe) {
-        await setPersistence(auth, browserLocalPersistence);
-        localStorage.setItem('sadhana_remember_me', 'true');
-      } else {
-        await setPersistence(auth, browserSessionPersistence);
-        localStorage.setItem('sadhana_remember_me', 'false');
-        localStorage.setItem('sadhana_auth_timestamp', Date.now().toString());
-      }
+      await setPersistence(auth, browserLocalPersistence);
+      localStorage.setItem('sadhana_remember_me', 'true');
 
       if (mode === 'register') {
         // Sign up
