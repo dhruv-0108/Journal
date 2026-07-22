@@ -95,37 +95,51 @@ const migrateStoreToReps = (store: SadhanaStore): SadhanaStore => {
   };
 };
 
-export const loadStore = (): SadhanaStore => {
+const GUEST_STORAGE_KEY = 'sadhana_journal_guest_store';
+
+export const getLocalStorageKey = (uid?: string | null): string => {
+  if (uid) {
+    return `sadhana_journal_user_${uid}`;
+  }
+  return GUEST_STORAGE_KEY;
+};
+
+export const loadStore = (uid?: string | null): SadhanaStore => {
   try {
-    const data = localStorage.getItem(STORE_LOCAL_STORAGE_KEY);
+    const key = getLocalStorageKey(uid);
+    let data = localStorage.getItem(key);
+
+    // Fallback migration for legacy single storage key if loading guest mode
+    if (!data && !uid) {
+      data = localStorage.getItem(STORE_LOCAL_STORAGE_KEY);
+    }
+
     if (data) {
       const parsed = JSON.parse(data);
       if (!parsed.sadhanas) parsed.sadhanas = [];
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
-      // Run one-time migration to raw reps
       const migrated = migrateStoreToReps(parsed);
       if (!parsed.migratedToReps) {
-        saveStore(migrated); // persist migration immediately
+        saveStore(migrated, uid);
       }
       return migrated;
     }
     
-    // Fallback/Migration check from old format
-    const oldLogsData = localStorage.getItem('sadhana_journal_logs');
-    const initialLogs = oldLogsData ? JSON.parse(oldLogsData) : {};
-    
+    // Default initial store if no data found
     const initialStore: SadhanaStore = {
+      username: '',
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
-      logs: initialLogs,
-      migratedToReps: true  // Fresh store – no migration needed
+      logs: {},
+      migratedToReps: true
     };
-    saveStore(initialStore);
+    saveStore(initialStore, uid);
     return initialStore;
   } catch (error) {
     console.error('Failed to load store from localStorage', error);
     return {
+      username: '',
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
       logs: {},
@@ -134,13 +148,24 @@ export const loadStore = (): SadhanaStore => {
   }
 };
 
-export const saveStore = (store: SadhanaStore): void => {
+export const saveStore = (store: SadhanaStore, uid?: string | null): void => {
   try {
-    localStorage.setItem(STORE_LOCAL_STORAGE_KEY, JSON.stringify(store));
+    const key = getLocalStorageKey(uid);
+    localStorage.setItem(key, JSON.stringify(store));
   } catch (error) {
     console.error('Failed to save store to localStorage', error);
   }
 };
+
+export const clearGuestStore = (): void => {
+  try {
+    localStorage.removeItem(GUEST_STORAGE_KEY);
+    localStorage.removeItem(STORE_LOCAL_STORAGE_KEY);
+  } catch (e) {
+    console.error('Failed to clear guest store:', e);
+  }
+};
+
 
 // Formats a date object to YYYY-MM-DD in local timezone
 export const formatDateString = (date: Date): string => {

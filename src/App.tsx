@@ -6,7 +6,7 @@ import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
 import { PracticeStats } from './components/PracticeStats';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
-import { loadStore, saveStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps, generateMockStoreData } from './sadhanaUtils';
+import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps, generateMockStoreData } from './sadhanaUtils';
 import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, RotateCcw } from 'lucide-react';
 
 // Firebase imports
@@ -53,7 +53,7 @@ function App() {
         try {
           // Fetch existing user store from Cloud Database
           const cloudStore = await loadUserStoreFromFirestore(user.uid);
-          const localStore = loadStore();
+          const localStore = loadStore(user.uid);
           
           let finalStore: SadhanaStore;
 
@@ -77,10 +77,11 @@ function App() {
             finalStore = { ...finalStore, sankalps: updatedSankalps };
           }
           
-          // Save merged/evaluated store to Firestore and local storage
+          // Save merged/evaluated store to Firestore and user-scoped local storage
           await saveUserStoreToFirestore(user.uid, finalStore);
           setStore(finalStore);
-          saveStore(finalStore);
+          saveStore(finalStore, user.uid);
+          clearGuestStore();
 
           // Subscribe to real-time updates from Firestore so edits on Device A instantly reflect on Device B
           unsubscribeSnapshot = subscribeToUserStore(
@@ -97,7 +98,7 @@ function App() {
                 if (JSON.stringify(prev) === JSON.stringify(finalRemoteStore)) {
                   return prev;
                 }
-                saveStore(finalRemoteStore);
+                saveStore(finalRemoteStore, user.uid);
                 return finalRemoteStore;
               });
             },
@@ -111,10 +112,10 @@ function App() {
           setIsCloudSyncing(false);
         }
       } else {
-        const loadedStore = loadStore();
+        const loadedStore = loadStore(null);
         const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(loadedStore.sankalps || [], loadedStore.logs || {});
         const finalStore = changed ? { ...loadedStore, sankalps: updatedSankalps } : loadedStore;
-        if (changed) saveStore(finalStore);
+        if (changed) saveStore(finalStore, null);
         setStore(finalStore);
         setIsCloudSyncing(false);
       }
@@ -139,9 +140,10 @@ function App() {
   const updateStore = (updater: (prev: SadhanaStore) => SadhanaStore) => {
     setStore(prev => {
       const updated = updater(prev);
-      saveStore(updated);
-      if (auth.currentUser) {
-        saveUserStoreToFirestore(auth.currentUser.uid, updated).catch(err => {
+      const uid = auth.currentUser?.uid;
+      saveStore(updated, uid);
+      if (uid) {
+        saveUserStoreToFirestore(uid, updated).catch(err => {
           console.error('Direct cloud database write failed:', err);
         });
       }
@@ -162,9 +164,10 @@ function App() {
   // Sign out handler
   const handleSignOut = async () => {
     if (confirm('Are you sure you want to sign out? Your journal is securely saved in your cloud account.')) {
+      const activeUid = auth.currentUser?.uid;
       try {
-        if (auth.currentUser) {
-          await saveUserStoreToFirestore(auth.currentUser.uid, store);
+        if (activeUid) {
+          await saveUserStoreToFirestore(activeUid, store);
         }
       } catch (e) {
         console.error('Cloud save on signout failed:', e);
@@ -185,10 +188,10 @@ function App() {
     setIsCloudSyncing(true);
     try {
       const cloudStore = await loadUserStoreFromFirestore(currentUser.uid);
-      const localStore = loadStore();
+      const localStore = loadStore(currentUser.uid);
       const merged = mergeStores(localStore, cloudStore);
       setStore(merged);
-      saveStore(merged);
+      saveStore(merged, currentUser.uid);
       await saveUserStoreToFirestore(currentUser.uid, merged);
       alert('Cloud Sync complete! Your data has been merged & restored.');
     } catch (err) {
