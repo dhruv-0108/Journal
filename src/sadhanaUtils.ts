@@ -106,12 +106,34 @@ export const getLocalStorageKey = (uid?: string | null): string => {
 
 export const loadStore = (uid?: string | null): SadhanaStore => {
   try {
-    const key = getLocalStorageKey(uid);
-    let data = localStorage.getItem(key);
+    let data: string | null = null;
 
-    // Fallback migration for legacy single storage key if loading guest mode
-    if (!data && !uid) {
+    // 1. Try loading user-scoped key if logged in
+    if (uid) {
+      data = localStorage.getItem(`sadhana_journal_user_${uid}`);
+    }
+
+    // 2. Fallback to guest storage key
+    if (!data) {
+      data = localStorage.getItem(GUEST_STORAGE_KEY);
+    }
+
+    // 3. Fallback to legacy single storage key
+    if (!data) {
       data = localStorage.getItem(STORE_LOCAL_STORAGE_KEY);
+    }
+
+    // 4. Fallback to old logs storage key
+    if (!data) {
+      const oldLogsData = localStorage.getItem('sadhana_journal_logs');
+      if (oldLogsData) {
+        data = JSON.stringify({
+          sadhanas: DEFAULT_SADHANA_LIST,
+          sankalps: [],
+          logs: JSON.parse(oldLogsData),
+          migratedToReps: true
+        });
+      }
     }
 
     if (data) {
@@ -120,13 +142,13 @@ export const loadStore = (uid?: string | null): SadhanaStore => {
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
       const migrated = migrateStoreToReps(parsed);
-      if (!parsed.migratedToReps) {
+      if (uid) {
         saveStore(migrated, uid);
       }
       return migrated;
     }
     
-    // Default initial store if no data found
+    // Default initial store if no data found anywhere
     const initialStore: SadhanaStore = {
       username: '',
       sadhanas: DEFAULT_SADHANA_LIST,

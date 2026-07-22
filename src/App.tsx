@@ -192,10 +192,19 @@ function App() {
       const cloudStore = await loadUserStoreFromFirestore(currentUser.uid);
       const localStore = loadStore(currentUser.uid);
       const merged = mergeStores(localStore, cloudStore);
-      setStore(merged);
-      saveStore(merged, currentUser.uid);
-      await saveUserStoreToFirestore(currentUser.uid, merged);
-      alert('Cloud Sync complete! Your data has been merged & restored.');
+      
+      const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(merged.sankalps || [], merged.logs || {});
+      const finalStore = changed ? { ...merged, sankalps: updatedSankalps } : merged;
+
+      setStore(finalStore);
+      saveStore(finalStore, currentUser.uid);
+      await saveUserStoreToFirestore(currentUser.uid, finalStore);
+
+      const logCount = Object.keys(finalStore.logs || {}).length;
+      const practiceCount = (finalStore.sadhanas || []).length;
+      const vowCount = (finalStore.sankalps || []).length;
+
+      alert(`Cloud Sync Complete!\n\nSynchronized & uploaded:\n• ${practiceCount} Practices\n• ${vowCount} Sankalps / Vows\n• ${logCount} Journal Log Entries\n\nYour account is now fully synced across all devices!`);
     } catch (err) {
       console.error('Manual sync failed:', err);
       alert('Failed to sync with cloud: ' + err);
