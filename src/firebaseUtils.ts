@@ -35,6 +35,7 @@ export const saveUserStoreToFirestore = async (uid: string, store: SadhanaStore)
     await setDoc(doc(db, 'users', uid), cleanStore);
   } catch (error: any) {
     console.error('Failed to save store to Firestore:', error);
+    throw error;
   }
 };
 
