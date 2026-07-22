@@ -6,8 +6,8 @@ import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
 import { PracticeStats } from './components/PracticeStats';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
-import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps, generateMockStoreData } from './sadhanaUtils';
-import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, RotateCcw } from 'lucide-react';
+import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps } from './sadhanaUtils';
+import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3 } from 'lucide-react';
 
 // Firebase imports
 import { auth } from './firebase';
@@ -185,12 +185,6 @@ function App() {
     }
   };
 
-  const handleRestoreSampleData = () => {
-    if (confirm("Would you like to populate sample sadhana journal logs and active vows? This will load a 45-day practice history and sample Sankalp vows.")) {
-      const mock = generateMockStoreData();
-      updateStore(() => mock);
-    }
-  };
 
   // Delete account handler
   const handleDeleteAccount = async () => {
@@ -768,20 +762,7 @@ function App() {
                 </div>
               </div>
 
-              {/* Sample Data Restoration Block */}
-              <div className="pt-5 border-t border-white/5 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-semibold text-slate-300 font-sans">Restore Sample Sadhana Data</h4>
-                  <p className="text-[10px] text-slate-500 font-sans">Populate sample practice logs, notes, and vows to explore or restore dataset.</p>
-                </div>
-                <button
-                  onClick={handleRestoreSampleData}
-                  className="px-4 py-2 text-xs font-semibold text-sadhana-gold bg-sadhana-gold/10 hover:bg-sadhana-gold/20 border border-sadhana-gold/25 rounded-xl transition-all font-sans shrink-0 flex items-center gap-1.5"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Load Sample Data
-                </button>
-              </div>
+
 
             </div>
           </div>
