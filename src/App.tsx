@@ -13,7 +13,7 @@ import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOu
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores, deleteUserStoreFromFirestore } from './firebaseUtils';
+import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores, deleteUserStoreFromFirestore, subscribeToUserStore } from './firebaseUtils';
 import { AuthPage } from './components/AuthPage';
 
 type TabId = 'dashboard' | 'vows' | 'practices' | 'settings';
@@ -34,49 +34,77 @@ function App() {
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
   const [showGuestGate, setShowGuestGate] = useState(false);
 
-  // 1. Listen to Firebase Auth state
+  // 1. Listen to Firebase Auth state & subscribe to real-time Firestore database updates
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeSnapshot: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      // Clean up previous real-time snapshot listener
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+
       setCurrentUser(user);
+
       if (user) {
         setShowAuthPage(false);
         setIsCloudSyncing(true);
         try {
-          // Fetch user document directly from Cloud Database
+          // Fetch existing user store from Cloud Database
           const cloudStore = await loadUserStoreFromFirestore(user.uid);
+          const localStore = loadStore();
           
           let finalStore: SadhanaStore;
 
           if (cloudStore !== null) {
-            // User document exists in Cloud Database: Use it as single source of truth!
-            finalStore = {
-              username: cloudStore.username || user.email?.split('@')[0] || 'Sadhaka',
-              sadhanas: (cloudStore.sadhanas && cloudStore.sadhanas.length > 0) ? cloudStore.sadhanas : DEFAULT_SADHANA_LIST,
-              sankalps: cloudStore.sankalps || [],
-              logs: cloudStore.logs || {},
-              migratedToReps: true
-            };
+            // User document exists in Cloud Database: Merge local guest/cached data with cloud store
+            finalStore = mergeStores(localStore, cloudStore);
           } else {
-            // New user account: Initialize cloud document
+            // New user account: Initialize cloud document from local store or defaults
             finalStore = {
-              username: user.email?.split('@')[0] || 'Sadhaka',
-              sadhanas: DEFAULT_SADHANA_LIST,
-              sankalps: [],
-              logs: {},
+              username: localStore.username || user.email?.split('@')[0] || 'Sadhaka',
+              sadhanas: (localStore.sadhanas && localStore.sadhanas.length > 0) ? localStore.sadhanas : DEFAULT_SADHANA_LIST,
+              sankalps: localStore.sankalps || [],
+              logs: localStore.logs || {},
               migratedToReps: true
             };
-            await saveUserStoreToFirestore(user.uid, finalStore);
           }
 
           // Auto evaluate expired vows to 'completed' or 'abandoned'
-          const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(finalStore.sankalps, finalStore.logs);
+          const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(finalStore.sankalps || [], finalStore.logs || {});
           if (changed) {
             finalStore = { ...finalStore, sankalps: updatedSankalps };
-            await saveUserStoreToFirestore(user.uid, finalStore);
           }
           
+          // Save merged/evaluated store to Firestore and local storage
+          await saveUserStoreToFirestore(user.uid, finalStore);
           setStore(finalStore);
           saveStore(finalStore);
+
+          // Subscribe to real-time updates from Firestore so edits on Device A instantly reflect on Device B
+          unsubscribeSnapshot = subscribeToUserStore(
+            user.uid,
+            (remoteStore, metadata) => {
+              // Ignore local pending writes to prevent loops or overwriting unsaved local changes
+              if (metadata.hasPendingWrites) return;
+
+              const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(remoteStore.sankalps || [], remoteStore.logs || {});
+              const finalRemoteStore = changed ? { ...remoteStore, sankalps: updatedSankalps } : remoteStore;
+
+              setStore(prev => {
+                // Prevent redundant state updates if store data is identical
+                if (JSON.stringify(prev) === JSON.stringify(finalRemoteStore)) {
+                  return prev;
+                }
+                saveStore(finalRemoteStore);
+                return finalRemoteStore;
+              });
+            },
+            (err) => {
+              console.error("Real-time Firestore listener error:", err);
+            }
+          );
         } catch (err) {
           console.error("Failed to load user document from Cloud Database:", err);
         } finally {
@@ -91,7 +119,13 @@ function App() {
         setIsCloudSyncing(false);
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+      }
+      unsubscribeAuth();
+    };
   }, []);
 
   // Sync username edit input with store

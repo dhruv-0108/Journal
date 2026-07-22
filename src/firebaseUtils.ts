@@ -1,4 +1,5 @@
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import type { Unsubscribe } from 'firebase/firestore';
 import { db } from './firebase';
 import type { SadhanaStore } from './types';
 
@@ -31,6 +32,28 @@ export const loadUserStoreFromFirestore = async (uid: string): Promise<SadhanaSt
     console.error('Failed to load store from Firestore:', error);
     throw error;
   }
+};
+
+// Subscribe to real-time updates from Firestore
+export const subscribeToUserStore = (
+  uid: string,
+  onUpdate: (store: SadhanaStore, metadata: { hasPendingWrites: boolean }) => void,
+  onError?: (error: Error) => void
+): Unsubscribe => {
+  const docRef = doc(db, 'users', uid);
+  return onSnapshot(
+    docRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        const cloudData = docSnap.data() as SadhanaStore;
+        onUpdate(cloudData, { hasPendingWrites: docSnap.metadata.hasPendingWrites });
+      }
+    },
+    (error) => {
+      console.error('Failed real-time subscription to Firestore:', error);
+      if (onError) onError(error);
+    }
+  );
 };
 
 // Clean merge helper so user data is never lost when logging in
@@ -81,3 +104,4 @@ export const deleteUserStoreFromFirestore = async (uid: string): Promise<void> =
     throw error;
   }
 };
+
