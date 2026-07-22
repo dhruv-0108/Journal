@@ -185,34 +185,6 @@ function App() {
     }
   };
 
-  const handleManualSyncCloud = async () => {
-    if (!currentUser) return;
-    setIsCloudSyncing(true);
-    try {
-      const cloudStore = await loadUserStoreFromFirestore(currentUser.uid);
-      const localStore = loadStore(currentUser.uid);
-      const merged = mergeStores(localStore, cloudStore);
-      
-      const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(merged.sankalps || [], merged.logs || {});
-      const finalStore = changed ? { ...merged, sankalps: updatedSankalps } : merged;
-
-      setStore(finalStore);
-      saveStore(finalStore, currentUser.uid);
-      await saveUserStoreToFirestore(currentUser.uid, finalStore);
-
-      const logCount = Object.keys(finalStore.logs || {}).length;
-      const practiceCount = (finalStore.sadhanas || []).length;
-      const vowCount = (finalStore.sankalps || []).length;
-
-      alert(`Cloud Sync Complete!\n\nSynchronized & uploaded:\n• ${practiceCount} Practices\n• ${vowCount} Sankalps / Vows\n• ${logCount} Journal Log Entries\n\nYour account is now fully synced across all devices!`);
-    } catch (err) {
-      console.error('Manual sync failed:', err);
-      alert('Failed to sync with cloud: ' + err);
-    } finally {
-      setIsCloudSyncing(false);
-    }
-  };
-
   const handleRestoreSampleData = () => {
     if (confirm("Would you like to populate sample sadhana journal logs and active vows? This will load a 45-day practice history and sample Sankalp vows.")) {
       const mock = generateMockStoreData();
@@ -600,15 +572,6 @@ function App() {
             <div className="flex items-center gap-2 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
               <span className="w-1.5 h-1.5 rounded-full bg-sadhana-emerald" />
               <span className="font-mono max-w-[120px] truncate">{currentUser.email}</span>
-              <span className="text-slate-600">|</span>
-              <button 
-                onClick={handleManualSyncCloud}
-                className="text-slate-400 hover:text-sadhana-gold transition-colors flex items-center gap-0.5"
-                title="Sync and restore data from cloud"
-              >
-                <Cloud className="w-3 h-3 text-sadhana-gold-accent" />
-                Sync
-              </button>
               <span className="text-slate-600">|</span>
               <button 
                 onClick={handleSignOut}

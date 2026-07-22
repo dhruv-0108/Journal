@@ -33,9 +33,8 @@ export const saveUserStoreToFirestore = async (uid: string, store: SadhanaStore)
   try {
     const cleanStore = sanitizeForFirestore(store);
     await setDoc(doc(db, 'users', uid), cleanStore);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to save store to Firestore:', error);
-    throw error;
   }
 };
 
@@ -48,9 +47,9 @@ export const loadUserStoreFromFirestore = async (uid: string): Promise<SadhanaSt
       return normalizeStore(docSnap.data());
     }
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to load store from Firestore:', error);
-    throw error;
+    return null;
   }
 };
 
