@@ -5,9 +5,11 @@ import { SadhanaModal } from './components/SadhanaModal';
 import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
 import { PracticeStats } from './components/PracticeStats';
+import { AuraView } from './components/AuraView';
+import { calculateAuraState } from './auraUtils';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
 import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps } from './sadhanaUtils';
-import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3 } from 'lucide-react';
+import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, Zap } from 'lucide-react';
 
 // Firebase imports
 import { auth } from './firebase';
@@ -16,7 +18,7 @@ import type { User } from 'firebase/auth';
 import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores, deleteUserStoreFromFirestore, subscribeToUserStore } from './firebaseUtils';
 import { AuthPage } from './components/AuthPage';
 
-type TabId = 'dashboard' | 'vows' | 'practices' | 'settings';
+type TabId = 'dashboard' | 'vows' | 'practices' | 'aura' | 'settings';
 
 
 function App() {
@@ -433,6 +435,7 @@ function App() {
 
   const displaySadhanas = store.sadhanas;
   const stats = calculateDashboardStats(displaySadhanas, store.logs);
+  const auraState = calculateAuraState(store.logs, displaySadhanas);
   const selectedDateStr = formatDateString(selectedDate);
   const selectedDayLog = store.logs[selectedDateStr];
 
@@ -497,11 +500,11 @@ function App() {
         </div>
 
         {/* Center: Tabs selector */}
-        <nav className="flex p-0.5 rounded-xl bg-[#1e1c1a]/60 border border-white/[0.04] shadow-inner max-w-md w-full sm:w-auto justify-between items-center gap-0.5">
+        <nav className="flex p-0.5 rounded-xl bg-[#1e1c1a]/60 border border-white/[0.04] shadow-inner max-w-lg w-full sm:w-auto justify-between items-center gap-0.5">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'dashboard'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -515,7 +518,7 @@ function App() {
           <button
             onClick={() => setActiveTab('vows')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'vows'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -529,7 +532,7 @@ function App() {
           <button
             onClick={() => setActiveTab('practices')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'practices'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -539,11 +542,28 @@ function App() {
             <BarChart3 className="w-3.5 h-3.5" />
             Practices
           </button>
+
+          <button
+            onClick={() => setActiveTab('aura')}
+            className={`
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              ${activeTab === 'aura'
+                ? 'bg-purple-500 text-white shadow shadow-purple-500/20'
+                : 'text-purple-300 hover:text-white hover:bg-purple-500/10'
+              }
+            `}
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            Aura
+            <span className="text-[9px] px-1 rounded-full font-mono bg-purple-950/60 text-purple-200 border border-purple-400/30">
+              Lvl {auraState.currentTier.level}
+            </span>
+          </button>
           
           <button
             onClick={() => setActiveTab('settings')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'settings'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -556,7 +576,20 @@ function App() {
         </nav>
 
         {/* Right Side: Account status/Sync actions */}
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end text-[10px] font-sans text-slate-400 shrink-0">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-end text-[10px] font-sans text-slate-400 shrink-0">
+          {/* Quick Aura Badge Pill */}
+          <button
+            onClick={() => setActiveTab('aura')}
+            className="flex items-center gap-1.5 py-1 px-2.5 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:text-white transition-all font-semibold"
+            title="View your Spiritual Aura"
+          >
+            <Zap className="w-3 h-3 text-amber-400 animate-pulse" />
+            <span>{auraState.currentTier.name}</span>
+            <span className="text-[9px] font-mono px-1 rounded bg-purple-500/20 text-purple-200 border border-purple-400/20">
+              Lvl {auraState.currentTier.level}
+            </span>
+          </button>
+
           {isCloudSyncing ? (
             <div className="flex items-center gap-1.5 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
               <Loader2 className="w-3 h-3 animate-spin text-sadhana-gold-accent" />
@@ -653,6 +686,17 @@ function App() {
               onUpdate={handleUpdateSadhana}
               onDelete={handleDeleteSadhana}
               isReferencedInSankalp={isReferencedInSankalp}
+            />
+          </div>
+        )}
+
+        {/* Tab 4: Aura & Spiritual Profile */}
+        {activeTab === 'aura' && (
+          <div className="animate-fade-in">
+            <AuraView
+              logs={store.logs}
+              sadhanas={displaySadhanas}
+              username={store.username}
             />
           </div>
         )}

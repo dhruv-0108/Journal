@@ -71,3 +71,33 @@ export interface DashboardStats {
   sadhanaCompletionRates: Record<string, number>; // maps sadhanaId to completion %
   totalDaysTracked: number;
 }
+
+export interface AuraTier {
+  level: number;
+  name: string;
+  sanskritName: string;
+  minReps: number;
+  maxReps: number; // Infinity for top level
+  primaryColor: string;
+  secondaryColor: string;
+  glowColor: string;
+  description: string;
+  iconName: string;
+}
+
+export interface AuraState {
+  totalReps: number;
+  totalMalas: number;
+  activeDaysCount: number;
+  currentTier: AuraTier;
+  nextTier: AuraTier | null;
+  progressPercent: number;
+  repsNeededForNext: number;
+  categoryBreakdown: {
+    mantraReps: number;
+    stotraReps: number;
+    chalisaReps: number;
+    otherReps: number;
+  };
+}
+
