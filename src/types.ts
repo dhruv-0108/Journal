@@ -57,6 +57,7 @@ export interface SadhanaStore {
   logs: SadhanaLogs;
   migratedToReps?: boolean;          // Guard flag so one-time migration runs only once
   purgedMockLogs?: boolean;          // Guard flag so demo mock data is purged from account
+  purgedMockV1?: boolean;            // One-time purge flag to wipe all pre-existing mock logs
 }
 
 export interface TimeframeMetrics {
