@@ -1,14 +1,13 @@
 import React, { useRef } from 'react';
-import { Download, Upload, Trash2 } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import type { SadhanaLogs } from '../types';
 
 interface DataControlsProps {
   logs: SadhanaLogs;
   onImport: (logs: SadhanaLogs) => void;
-  onClear: () => void;
 }
 
-export const DataControls: React.FC<DataControlsProps> = ({ logs, onImport, onClear }) => {
+export const DataControls: React.FC<DataControlsProps> = ({ logs, onImport }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -71,14 +70,6 @@ export const DataControls: React.FC<DataControlsProps> = ({ logs, onImport, onCl
     fileReader.readAsText(files[0]);
   };
 
-  const handleReset = () => {
-    if (confirm('CRITICAL WARNING: This will permanently delete ALL your logged sadhanas and journal entries. There is no undo. Are you absolutely sure?')) {
-      if (confirm('Double confirmation: Type "DELETE" in the prompt if you are sure.')) {
-        onClear();
-      }
-    }
-  };
-
   return (
     <div className="glass-panel rounded-lg p-5 flex flex-col md:flex-row gap-4 items-center justify-between border border-white/[0.04] shadow-sm">
       <div className="text-center md:text-left">
@@ -117,16 +108,6 @@ export const DataControls: React.FC<DataControlsProps> = ({ logs, onImport, onCl
         >
           <Download className="w-3.5 h-3.5" />
           Export Backup
-        </button>
-
-        {/* Reset Data */}
-        <button
-          onClick={handleReset}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-500 hover:text-rose-400 bg-rose-950/15 hover:bg-rose-950/30 border border-rose-950/30 hover:border-rose-900/40 rounded-xl transition-all"
-          title="Clear all logs"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          Reset All
         </button>
       </div>
     </div>
