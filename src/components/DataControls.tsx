@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
-import { Download, Upload, RefreshCw, Trash2 } from 'lucide-react';
+import { Download, Upload, Trash2 } from 'lucide-react';
 import type { SadhanaLogs } from '../types';
-import { generateMockStoreData } from '../sadhanaUtils';
 
 interface DataControlsProps {
   logs: SadhanaLogs;
@@ -72,13 +71,6 @@ export const DataControls: React.FC<DataControlsProps> = ({ logs, onImport, onCl
     fileReader.readAsText(files[0]);
   };
 
-  const handleLoadMockData = () => {
-    if (confirm('This will load 45 days of sample mock logs to demonstrate the calendar and statistics. Would you like to proceed?')) {
-      const mock = generateMockStoreData();
-      onImport(mock as any);
-    }
-  };
-
   const handleReset = () => {
     if (confirm('CRITICAL WARNING: This will permanently delete ALL your logged sadhanas and journal entries. There is no undo. Are you absolutely sure?')) {
       if (confirm('Double confirmation: Type "DELETE" in the prompt if you are sure.')) {
@@ -104,16 +96,6 @@ export const DataControls: React.FC<DataControlsProps> = ({ logs, onImport, onCl
           accept=".json"
           className="hidden"
         />
-
-        {/* Load Mock Data */}
-        <button
-          onClick={handleLoadMockData}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-sadhana-gold hover:text-white bg-sadhana-gold/5 hover:bg-sadhana-gold/15 border border-sadhana-gold/25 hover:border-sadhana-gold/50 rounded-xl transition-all"
-          title="Seed with sample data"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          Load Demo Data
-        </button>
 
         {/* Import Backup */}
         <button
