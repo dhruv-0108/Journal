@@ -115,13 +115,13 @@ const MOCK_NOTES_LIST = new Set([
 ]);
 
 export const purgeMockLogs = (store: SadhanaStore): SadhanaStore => {
-  if (store.purgedMockLogs) return store;
-
   const cleanLogs: SadhanaStore['logs'] = {};
+  let hasChanges = false;
   
   Object.entries(store.logs || {}).forEach(([dateStr, log]) => {
     // If log note is in MOCK_NOTES_LIST, skip it (mock demo data)
     if (log.notes && MOCK_NOTES_LIST.has(log.notes.trim())) {
+      hasChanges = true;
       return;
     }
 
@@ -136,6 +136,7 @@ export const purgeMockLogs = (store: SadhanaStore): SadhanaStore => {
 
     const navarnaCount = log.counts?.['navarna_mantra'] || 0;
     if (isMockPresetSet && (navarnaCount === 108 || navarnaCount === 324 || navarnaCount === 1 || navarnaCount === 3)) {
+      hasChanges = true;
       return;
     }
 
@@ -144,9 +145,16 @@ export const purgeMockLogs = (store: SadhanaStore): SadhanaStore => {
   });
 
   // Preserve real user sankalps, filter out fake demo sankalps
-  const cleanSankalps = (store.sankalps || []).filter(
-    s => s.id !== 'sankalp_durga' && s.id !== 'sankalp_hanuman'
-  );
+  const cleanSankalps = (store.sankalps || []).filter(s => {
+    const isMock = s.id === 'sankalp_durga' || s.id === 'sankalp_hanuman' || 
+      s.title?.includes('Durga Saptashati vow') || s.title?.includes('Hanuman Vow');
+    if (isMock) hasChanges = true;
+    return !isMock;
+  });
+
+  if (!hasChanges && store.purgedMockLogs) {
+    return store;
+  }
 
   return {
     ...store,
