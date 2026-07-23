@@ -8,7 +8,7 @@ import { PracticeStats } from './components/PracticeStats';
 import { AuraView } from './components/AuraView';
 import { calculateAuraState } from './auraUtils';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp, SadhanaLogs } from './types';
-import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps, purgeMockLogs } from './sadhanaUtils';
+import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps } from './sadhanaUtils';
 import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, Zap } from 'lucide-react';
 
 import { auth } from './firebase';
@@ -70,9 +70,6 @@ function App() {
             };
           }
 
-          // Purge any legacy sample mock data from user account
-          finalStore = purgeMockLogs(finalStore);
-
           // Auto evaluate expired vows to 'completed' or 'abandoned'
           const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(finalStore.sankalps || [], finalStore.logs || {});
           if (changed) {
@@ -92,9 +89,8 @@ function App() {
               // Ignore local pending writes to prevent loops or overwriting unsaved local changes
               if (metadata.hasPendingWrites) return;
 
-              const purgedRemote = purgeMockLogs(remoteStore);
-              const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(purgedRemote.sankalps || [], purgedRemote.logs || {});
-              const finalRemoteStore = changed ? { ...purgedRemote, sankalps: updatedSankalps } : purgedRemote;
+              const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(remoteStore.sankalps || [], remoteStore.logs || {});
+              const finalRemoteStore = changed ? { ...remoteStore, sankalps: updatedSankalps } : remoteStore;
 
               setStore(prev => {
                 // Prevent redundant state updates if store data is identical
