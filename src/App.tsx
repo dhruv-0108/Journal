@@ -422,11 +422,56 @@ function App() {
 
 
   const handleClearSampleData = async () => {
-    if (confirm('Clear sample test logs from your account database so your stats and Aura start 100% fresh with your real live sadhana entries?')) {
+    const sampleNotes = new Set([
+      "Chanting Sidh Kunjika Stotra before sunrise created a bubble of deep peace.",
+      "Mantra japa done. Felt highly energetic and motivated today.",
+      "Completed Hanuman Chalisa in the evening. Restored mental resilience.",
+      "Sadhana done during Brahma Muhurta. High focus, no distractions.",
+      "Offered Sri Suktam recitations during twilight. Felt a strong wave of gratitude.",
+      "A quiet, simple practice session. Consistency is key.",
+      "Readings complete. Documenting observations of increased mindfulness."
+    ]);
+
+    const cleanLogs: SadhanaLogs = {};
+    let removedCount = 0;
+
+    Object.entries(store.logs || {}).forEach(([dateStr, log]) => {
+      if (log.notes && sampleNotes.has(log.notes.trim())) {
+        removedCount++;
+        return;
+      }
+
+      const keys = Object.keys(log.completed || {});
+      const isSamplePattern = keys.length === 5 && 
+        keys.includes('hanuman_chalisa') && 
+        keys.includes('sidhkunjika_stotra') && 
+        keys.includes('navarna_mantra') && 
+        keys.includes('deviatharvashirsha') && 
+        keys.includes('sri_suktam');
+
+      const navarnaReps = log.counts?.['navarna_mantra'] || 0;
+      if (isSamplePattern && (navarnaReps === 108 || navarnaReps === 324 || navarnaReps === 1 || navarnaReps === 3)) {
+        removedCount++;
+        return;
+      }
+
+      cleanLogs[dateStr] = log;
+    });
+
+    const cleanSankalps = (store.sankalps || []).filter(
+      s => s.id !== 'sankalp_durga' && s.id !== 'sankalp_hanuman'
+    );
+
+    if (removedCount === 0 && cleanSankalps.length === (store.sankalps || []).length) {
+      alert('No sample demo logs found in your account. All your current entries are 100% real!');
+      return;
+    }
+
+    if (confirm(`Found ${removedCount} sample test log entries. Would you like to remove these sample entries while keeping 100% of your real logged practices?`)) {
       const cleanStore: SadhanaStore = {
         ...store,
-        logs: {},
-        sankalps: [],
+        sankalps: cleanSankalps,
+        logs: cleanLogs,
         purgedMockLogs: true,
         purgedMockV1: true
       };
@@ -437,7 +482,7 @@ function App() {
       } else {
         saveStore(cleanStore, null);
       }
-      alert('Sample test data successfully cleared! Your account is now clean and ready.');
+      alert(`Successfully removed ${removedCount} sample test entries! All your real practice logs have been preserved.`);
     }
   };
 
