@@ -72,27 +72,27 @@ export interface DashboardStats {
   totalDaysTracked: number;
 }
 
-export interface AuraTier {
-  level: number;
-  name: string;
-  sanskritName: string;
-  minReps: number;
-  maxReps: number; // Infinity for top level
-  primaryColor: string;
-  secondaryColor: string;
-  glowColor: string;
-  description: string;
-  iconName: string;
+export interface AuraLayer {
+  layerNumber: number;        // 1 to 12
+  name: string;               // E.g. "Prana Kosha"
+  sanskritName: string;       // E.g. "प्राण कोश"
+  title: string;              // E.g. "Vital Breath Field"
+  minReps: number;            // Threshold in raw reps
+  colorHex: string;           // Scriptural color hex
+  glowColor: string;          // RGBA glow string
+  meaning: string;            // Scriptural meaning / description
 }
 
 export interface AuraState {
   totalReps: number;
   totalMalas: number;
   activeDaysCount: number;
-  currentTier: AuraTier;
-  nextTier: AuraTier | null;
-  progressPercent: number;
+  unlockedLayersCount: number;// Number of unlocked layers out of 12
+  currentHighestLayer: AuraLayer;
+  nextLayer: AuraLayer | null;
+  progressPercentToNext: number;
   repsNeededForNext: number;
+  allLayers: (AuraLayer & { isUnlocked: boolean })[];
   categoryBreakdown: {
     mantraReps: number;
     stotraReps: number;

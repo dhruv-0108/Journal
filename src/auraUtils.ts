@@ -1,66 +1,131 @@
-import type { SadhanaLogs, SadhanaConfig, AuraTier, AuraState } from './types';
+import type { SadhanaLogs, SadhanaConfig, AuraLayer, AuraState } from './types';
 import { MALA_REPS } from './sadhanaUtils';
 
-export const AURA_TIERS: AuraTier[] = [
+/**
+ * 12 Scriptural Aura Layers (Dwadasa Abha / 12 Subtle Energy Fields)
+ * According to Vedic and Yogic subtle energy body scriptures (Yoga Upanishads & Tantras),
+ * spiritual aura radiates outwards through 12 concentric layers of subtle energy.
+ */
+export const SCRIPTURAL_AURA_LAYERS: AuraLayer[] = [
   {
-    level: 1,
-    name: 'Arambha',
-    sanskritName: 'आरम्भ',
-    minReps: 0,
-    maxReps: 1079, // Less than 10 Malas
-    primaryColor: '#cd7f66',
-    secondaryColor: '#f59e0b',
-    glowColor: 'rgba(205, 127, 102, 0.4)',
-    description: 'The spark of spiritual practice awakens within. Early devotion begins to illuminate your subtle energy body.',
-    iconName: 'Sparkles'
+    layerNumber: 1,
+    name: 'Prana Kosha',
+    sanskritName: 'प्राण कोश',
+    title: 'Vital Breath Etheric Field',
+    minReps: 0, // Unlocked by default
+    colorHex: '#e2e8f0', // Etheric Pearl White
+    glowColor: 'rgba(226, 232, 240, 0.45)',
+    meaning: 'The foundational vital energy envelope surrounding the physical body, nourished by conscious breath and initial sadhana.'
   },
   {
-    level: 2,
-    name: 'Sadhaka',
-    sanskritName: 'साधक',
+    layerNumber: 2,
+    name: 'Agni Tejas',
+    sanskritName: 'अग्नि तेजस्',
+    title: 'Sacred Fire Purifying Ring',
+    minReps: 108, // 1 Mala
+    colorHex: '#f97316', // Crimson Saffron Fire
+    glowColor: 'rgba(249, 115, 22, 0.5)',
+    meaning: 'The purifying spiritual fire ignited through mantra japa that cleanses subtle mental impressions (samskaras).'
+  },
+  {
+    layerNumber: 3,
+    name: 'Surya Prabha',
+    sanskritName: 'सूर्य प्रभा',
+    title: 'Solar Illumination Aura',
+    minReps: 540, // 5 Malas
+    colorHex: '#eab308', // Solar Gold
+    glowColor: 'rgba(234, 179, 8, 0.5)',
+    meaning: 'Radiant solar energy imparting razor-sharp mental focus, unwavering willpower, and inner vitality.'
+  },
+  {
+    layerNumber: 4,
+    name: 'Anahata Tejas',
+    sanskritName: 'अनाहत तेजस्',
+    title: 'Heart Harmony & Devotion Field',
     minReps: 1080, // 10 Malas
-    maxReps: 10799, // Less than 100 Malas
-    primaryColor: '#10b981',
-    secondaryColor: '#eab308',
-    glowColor: 'rgba(16, 185, 129, 0.45)',
-    description: 'The fire of inner discipline generates a magnetic aura field, instilling resilience, vitality, and mental clarity.',
-    iconName: 'Flame'
+    colorHex: '#10b981', // Sage Emerald Green
+    glowColor: 'rgba(16, 185, 129, 0.5)',
+    meaning: 'Luminous heart-center radiance of unconditional devotion, empathy, and serene inner peace.'
   },
   {
-    level: 3,
-    name: 'Tapovan',
-    sanskritName: 'तपोवन',
-    minReps: 10800, // 100 Malas
-    maxReps: 53999, // Less than 500 Malas
-    primaryColor: '#a855f7',
-    secondaryColor: '#ec4899',
-    glowColor: 'rgba(168, 85, 247, 0.5)',
-    description: 'Deep meditative focus creates a serene, luminous purple shield of spiritual energy shielding your presence.',
-    iconName: 'Shield'
-  },
-  {
-    level: 4,
-    name: 'Siddhi',
-    sanskritName: 'सिद्धि',
-    minReps: 54000, // 500 Malas
-    maxReps: 107999, // Less than 1,000 Malas
-    primaryColor: '#06b6d4',
-    secondaryColor: '#3b82f6',
+    layerNumber: 5,
+    name: 'Japa Mandala',
+    sanskritName: 'जप मण्डल',
+    title: 'Sacred Sound Vibration Ring',
+    minReps: 2700, // 25 Malas
+    colorHex: '#06b6d4', // Luminous Turquoise Cyan
     glowColor: 'rgba(6, 182, 212, 0.55)',
-    description: 'Higher contemplative absorption radiates celestial warmth and divine clarity that inspires all around you.',
-    iconName: 'Sun'
+    meaning: 'Resonant field of sacred acoustic vibrations created by vocal and mental mantra recitations.'
   },
   {
-    level: 5,
-    name: 'Ananda',
-    sanskritName: 'आनन्द',
-    minReps: 108000, // 1,000+ Malas
-    maxReps: Infinity,
-    primaryColor: '#fbbf24',
-    secondaryColor: '#f43f5e',
-    glowColor: 'rgba(251, 191, 36, 0.65)',
-    description: 'Supreme mastery of sadhana. The divine golden aura shines eternally with unbounded cosmic light.',
-    iconName: 'Crown'
+    layerNumber: 6,
+    name: 'Vijnana Kosha',
+    sanskritName: 'विज्ञान कोश',
+    title: 'Intuitive Wisdom Sphere',
+    minReps: 5400, // 50 Malas
+    colorHex: '#3b82f6', // Sapphire Cosmic Blue
+    glowColor: 'rgba(59, 130, 246, 0.55)',
+    meaning: 'Sphere of higher intellect and spiritual intuition, granting deep clarity beyond rational thought.'
+  },
+  {
+    layerNumber: 7,
+    name: 'Ojas Mandala',
+    sanskritName: 'ओजस् मण्डल',
+    title: 'Spiritual Vigor Protection Shield',
+    minReps: 10800, // 100 Malas
+    colorHex: '#8b5cf6', // Royal Amethyst Violet
+    glowColor: 'rgba(139, 92, 246, 0.6)',
+    meaning: 'Subtle spiritual essence built through chastity and steady discipline, creating an impenetrable protective aura.'
+  },
+  {
+    layerNumber: 8,
+    name: 'Siddhi Tejas',
+    sanskritName: 'सिद्धि तेजस्',
+    title: 'Mystic Absorption Radiance',
+    minReps: 27000, // 250 Malas
+    colorHex: '#ec4899', // Luminous Lotus Pink
+    glowColor: 'rgba(236, 72, 153, 0.6)',
+    meaning: 'Radiance of steady meditative absorption (Dharana), elevating spiritual fortitude and subtle perception.'
+  },
+  {
+    layerNumber: 9,
+    name: 'Tapas Mandala',
+    sanskritName: 'तपस् मण्डल',
+    title: 'Ascetic Discipline Sunbeam',
+    minReps: 54000, // 500 Malas
+    colorHex: '#f59e0b', // Intense Sunbeam Gold
+    glowColor: 'rgba(245, 158, 11, 0.65)',
+    meaning: 'High-frequency spiritual heat generated by vows and rigorous daily practice, burning karmic blockages.'
+  },
+  {
+    layerNumber: 10,
+    name: 'Chitta Tejas',
+    sanskritName: 'चित्त तेजस्',
+    title: 'Pure Consciousness Diamond Light',
+    minReps: 108000, // 1,000 Malas
+    colorHex: '#f8fafc', // Pure Diamond White
+    glowColor: 'rgba(248, 250, 252, 0.7)',
+    meaning: 'Luminous crystal-clear consciousness field reflecting pure, unclouded awareness.'
+  },
+  {
+    layerNumber: 11,
+    name: 'Divya Abha',
+    sanskritName: 'दिव्य आभा',
+    title: 'Celestial Divine Aura',
+    minReps: 270000, // 2,500 Malas
+    colorHex: '#38bdf8', // Celestial Opal Sky Blue
+    glowColor: 'rgba(56, 189, 248, 0.75)',
+    meaning: 'Divine aura radiating uplifting cosmic peace, grace, and spiritual upliftment to all sentient beings nearby.'
+  },
+  {
+    layerNumber: 12,
+    name: 'Maha Tejas',
+    sanskritName: 'महा तेजस्',
+    title: 'Supreme Transcendental Crown',
+    minReps: 540000, // 5,000 Malas
+    colorHex: '#d946ef', // Cosmic Violet Gold Flame
+    glowColor: 'rgba(217, 70, 239, 0.8)',
+    meaning: 'The ultimate scriptural aura stage of boundless divine light, complete transcendence, and eternal bliss.'
   }
 ];
 
@@ -112,37 +177,46 @@ export const calculateAuraState = (
 
   const totalMalas = Math.floor(totalReps / MALA_REPS);
 
-  // Find current tier based on totalReps
-  let currentTierIndex = AURA_TIERS.findIndex(
-    tier => totalReps >= tier.minReps && totalReps <= tier.maxReps
-  );
-  if (currentTierIndex === -1) {
-    currentTierIndex = totalReps >= AURA_TIERS[AURA_TIERS.length - 1].minReps
-      ? AURA_TIERS.length - 1
-      : 0;
-  }
+  // Determine unlocked status for all 12 scriptural layers
+  const allLayers = SCRIPTURAL_AURA_LAYERS.map(layer => ({
+    ...layer,
+    isUnlocked: totalReps >= layer.minReps
+  }));
 
-  const currentTier = AURA_TIERS[currentTierIndex];
-  const nextTier = currentTierIndex < AURA_TIERS.length - 1 ? AURA_TIERS[currentTierIndex + 1] : null;
+  const unlockedLayers = allLayers.filter(l => l.isUnlocked);
+  const unlockedLayersCount = unlockedLayers.length;
 
-  let progressPercent = 100;
+  const currentHighestLayer = unlockedLayers.length > 0 
+    ? unlockedLayers[unlockedLayers.length - 1] 
+    : SCRIPTURAL_AURA_LAYERS[0];
+
+  const nextLayer = unlockedLayersCount < SCRIPTURAL_AURA_LAYERS.length 
+    ? SCRIPTURAL_AURA_LAYERS[unlockedLayersCount] 
+    : null;
+
+  let progressPercentToNext = 100;
   let repsNeededForNext = 0;
 
-  if (nextTier) {
-    const range = nextTier.minReps - currentTier.minReps;
-    const progressInCurrent = totalReps - currentTier.minReps;
-    progressPercent = Math.min(100, Math.max(0, Math.round((progressInCurrent / range) * 100)));
-    repsNeededForNext = nextTier.minReps - totalReps;
+  if (nextLayer) {
+    const prevThreshold = currentHighestLayer.minReps;
+    const nextThreshold = nextLayer.minReps;
+    const range = nextThreshold - prevThreshold || 1;
+    const progressInCurrent = totalReps - prevThreshold;
+
+    progressPercentToNext = Math.min(100, Math.max(0, Math.round((progressInCurrent / range) * 100)));
+    repsNeededForNext = nextThreshold - totalReps;
   }
 
   return {
     totalReps,
     totalMalas,
     activeDaysCount,
-    currentTier,
-    nextTier,
-    progressPercent,
+    unlockedLayersCount,
+    currentHighestLayer,
+    nextLayer,
+    progressPercentToNext,
     repsNeededForNext,
+    allLayers,
     categoryBreakdown
   };
 };

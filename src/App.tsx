@@ -555,8 +555,8 @@ function App() {
           >
             <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
             Aura
-            <span className="text-[9px] px-1 rounded-full font-mono bg-purple-950/60 text-purple-200 border border-purple-400/30">
-              Lvl {auraState.currentTier.level}
+            <span className="text-[9px] px-1.5 py-0.2 rounded-full font-mono bg-purple-950/60 text-purple-200 border border-purple-400/30">
+              {auraState.unlockedLayersCount}/12
             </span>
           </button>
           
@@ -577,19 +577,6 @@ function App() {
 
         {/* Right Side: Account status/Sync actions */}
         <div className="flex items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-end text-[10px] font-sans text-slate-400 shrink-0">
-          {/* Quick Aura Badge Pill */}
-          <button
-            onClick={() => setActiveTab('aura')}
-            className="flex items-center gap-1.5 py-1 px-2.5 rounded-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:text-white transition-all font-semibold"
-            title="View your Spiritual Aura"
-          >
-            <Zap className="w-3 h-3 text-amber-400 animate-pulse" />
-            <span>{auraState.currentTier.name}</span>
-            <span className="text-[9px] font-mono px-1 rounded bg-purple-500/20 text-purple-200 border border-purple-400/20">
-              Lvl {auraState.currentTier.level}
-            </span>
-          </button>
-
           {isCloudSyncing ? (
             <div className="flex items-center gap-1.5 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
               <Loader2 className="w-3 h-3 animate-spin text-sadhana-gold-accent" />
