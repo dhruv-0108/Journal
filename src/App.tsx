@@ -612,7 +612,9 @@ function App() {
       </header>
 
       {/* Main Container */}
-      <div className={`flex-1 max-w-7xl w-full mx-auto px-4 md:px-8 py-6 space-y-6 animate-fade-in transition-all duration-300 flex flex-col ${
+      <div className={`flex-1 w-full mx-auto animate-fade-in transition-all duration-300 flex flex-col ${
+        activeTab === 'aura' ? 'max-w-none px-0 py-0' : 'max-w-7xl px-4 md:px-8 py-6 space-y-6'
+      } ${
         showGuestGate ? 'blur-[6px] pointer-events-none select-none' : ''
       }`}>
         
