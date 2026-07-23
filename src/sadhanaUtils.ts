@@ -104,10 +104,6 @@ export const getLocalStorageKey = (uid?: string | null): string => {
   return GUEST_STORAGE_KEY;
 };
 
-export const purgeMockLogs = (store: SadhanaStore): SadhanaStore => {
-  return store;
-};
-
 export const loadStore = (uid?: string | null): SadhanaStore => {
   try {
     let data: string | null = null;
@@ -146,11 +142,10 @@ export const loadStore = (uid?: string | null): SadhanaStore => {
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
       const migrated = migrateStoreToReps(parsed);
-      const purged = purgeMockLogs(migrated);
       if (uid) {
-        saveStore(purged, uid);
+        saveStore(migrated, uid);
       }
-      return purged;
+      return migrated;
     }
     
     // Default initial store if no data found anywhere
@@ -159,8 +154,7 @@ export const loadStore = (uid?: string | null): SadhanaStore => {
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
       logs: {},
-      migratedToReps: true,
-      purgedMockLogs: true
+      migratedToReps: true
     };
     saveStore(initialStore, uid);
     return initialStore;
@@ -171,8 +165,7 @@ export const loadStore = (uid?: string | null): SadhanaStore => {
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
       logs: {},
-      migratedToReps: true,
-      purgedMockLogs: true
+      migratedToReps: true
     };
   }
 };
@@ -470,4 +463,81 @@ export const calculateDashboardStats = (
     sadhanaCompletionRates,
     totalDaysTracked
   };
+};
+
+export const generateMockStoreData = (): SadhanaStore => {
+  const store: SadhanaStore = {
+    username: 'Dhruv',
+    sadhanas: DEFAULT_SADHANA_LIST,
+    sankalps: [
+      {
+        id: 'sankalp_durga',
+        title: '41-Day Durga Saptashati vow',
+        sadhanaId: 'sidhkunjika_stotra',
+        targetCount: 1,
+        durationDays: 41,
+        startDate: getOffsetDateString(formatDateString(new Date()), -30), // Started 30 days ago
+        status: 'active'
+      },
+      {
+        id: 'sankalp_hanuman',
+        title: '21-Day Hanuman Vow',
+        sadhanaId: 'hanuman_chalisa',
+        targetCount: 1,
+        durationDays: 21,
+        startDate: getOffsetDateString(formatDateString(new Date()), -40), // Started 40 days ago (completed)
+        status: 'completed'
+      }
+    ],
+    logs: {}
+  };
+
+  const today = new Date();
+  
+  // Seed past 45 days of logs
+  for (let i = 0; i < 45; i++) {
+    const d = new Date();
+    d.setDate(today.getDate() - i);
+    const dateStr = formatDateString(d);
+
+    // Seed logs: 80% consistency
+    if (Math.random() > 0.20) {
+      const completed: Record<string, boolean> = {
+        hanuman_chalisa: Math.random() > 0.3,
+        sidhkunjika_stotra: Math.random() > 0.4, // Keep high to match Durga Vow
+        navarna_mantra: Math.random() > 0.3,
+        deviatharvashirsha: Math.random() > 0.7,
+        sri_suktam: Math.random() > 0.6
+      };
+
+      const counts: Record<string, number> = {
+        hanuman_chalisa: completed.hanuman_chalisa ? 1 : 0,
+        sidhkunjika_stotra: completed.sidhkunjika_stotra ? 1 : 0,
+        // navarna_mantra is mala-type – store raw reps (108 = 1 Mala, 324 = 3 Malas)
+        navarna_mantra: completed.navarna_mantra ? (Math.random() > 0.6 ? 324 : 108) : 0,
+        deviatharvashirsha: completed.deviatharvashirsha ? 1 : 0,
+        sri_suktam: completed.sri_suktam ? 1 : 0
+      };
+
+      const notesList = [
+        "Chanting Sidh Kunjika Stotra before sunrise created a bubble of deep peace.",
+        "Mantra japa done. Felt highly energetic and motivated today.",
+        "Completed Hanuman Chalisa in the evening. Restored mental resilience.",
+        "Sadhana done during Brahma Muhurta. High focus, no distractions.",
+        "Offered Sri Suktam recitations during twilight. Felt a strong wave of gratitude.",
+        "A quiet, simple practice session. Consistency is key.",
+        "Readings complete. Documenting observations of increased mindfulness."
+      ];
+
+      const notes = Math.random() > 0.4 ? notesList[Math.floor(Math.random() * notesList.length)] : undefined;
+
+      store.logs[dateStr] = {
+        completed,
+        counts,
+        notes
+      };
+    }
+  }
+
+  return store;
 };

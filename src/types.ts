@@ -56,8 +56,6 @@ export interface SadhanaStore {
   sankalps: Sankalp[];
   logs: SadhanaLogs;
   migratedToReps?: boolean;          // Guard flag so one-time migration runs only once
-  purgedMockLogs?: boolean;          // Guard flag so demo mock data is purged from account
-  purgedMockV1?: boolean;            // Guard flag for sample data cleanup
 }
 
 export interface TimeframeMetrics {
@@ -73,33 +71,3 @@ export interface DashboardStats {
   sadhanaCompletionRates: Record<string, number>; // maps sadhanaId to completion %
   totalDaysTracked: number;
 }
-
-export interface AuraLayer {
-  layerNumber: number;        // 1 to 12
-  name: string;               // E.g. "Prana Kosha"
-  sanskritName: string;       // E.g. "प्राण कोश"
-  title: string;              // E.g. "Vital Breath Field"
-  minReps: number;            // Threshold in raw reps
-  colorHex: string;           // Scriptural color hex
-  glowColor: string;          // RGBA glow string
-  meaning: string;            // Scriptural meaning / description
-}
-
-export interface AuraState {
-  totalReps: number;
-  totalMalas: number;
-  activeDaysCount: number;
-  unlockedLayersCount: number;// Number of unlocked layers out of 12
-  currentHighestLayer: AuraLayer;
-  nextLayer: AuraLayer | null;
-  progressPercentToNext: number;
-  repsNeededForNext: number;
-  allLayers: (AuraLayer & { isUnlocked: boolean })[];
-  categoryBreakdown: {
-    mantraReps: number;
-    stotraReps: number;
-    chalisaReps: number;
-    otherReps: number;
-  };
-}
-

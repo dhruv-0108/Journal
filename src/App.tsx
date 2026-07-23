@@ -5,20 +5,18 @@ import { SadhanaModal } from './components/SadhanaModal';
 import { SadhanaManager } from './components/SadhanaManager';
 import { SankalpManager } from './components/SankalpManager';
 import { PracticeStats } from './components/PracticeStats';
-import { AuraView } from './components/AuraView';
-import { calculateAuraState } from './auraUtils';
-import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp, SadhanaLogs } from './types';
+import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
 import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps } from './sadhanaUtils';
-import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, Zap } from 'lucide-react';
+import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3 } from 'lucide-react';
 
+// Firebase imports
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores, deleteUserStoreFromFirestore, subscribeToUserStore } from './firebaseUtils';
-import { DataControls } from './components/DataControls';
 import { AuthPage } from './components/AuthPage';
 
-type TabId = 'dashboard' | 'vows' | 'practices' | 'aura' | 'settings';
+type TabId = 'dashboard' | 'vows' | 'practices' | 'settings';
 
 
 function App() {
@@ -28,20 +26,25 @@ function App() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   
+  const [tempUsernameEdit, setTempUsernameEdit] = useState('');
+
   // Firebase Auth states
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAuthPage, setShowAuthPage] = useState(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
   const [showGuestGate, setShowGuestGate] = useState(false);
 
-  // Editable display name state
-  const [tempUsernameEdit, setTempUsernameEdit] = useState<string>('');
-
   // 1. Listen to Firebase Auth state & subscribe to real-time Firestore database updates
   useEffect(() => {
     let unsubscribeSnapshot: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      // Clean up previous real-time snapshot listener
+      if (unsubscribeSnapshot) {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+
       setCurrentUser(user);
 
       if (user) {
@@ -105,12 +108,18 @@ function App() {
               console.error("Real-time Firestore listener error:", err);
             }
           );
-        } catch (error) {
-          console.error("Failed to load user store from Cloud Database:", error);
+        } catch (err) {
+          console.error("Failed to load user document from Cloud Database:", err);
         } finally {
           setIsCloudSyncing(false);
         }
       } else {
+        const loadedStore = loadStore(null);
+        const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(loadedStore.sankalps || [], loadedStore.logs || {});
+        const finalStore = changed ? { ...loadedStore, sankalps: updatedSankalps } : loadedStore;
+        if (changed) saveStore(finalStore, null);
+        setStore(finalStore);
+        setIsCloudSyncing(false);
       }
     });
 
@@ -417,86 +426,6 @@ function App() {
 
 
 
-  const handleClearSampleData = async () => {
-    const sampleNotes = new Set([
-      "Chanting Sidh Kunjika Stotra before sunrise created a bubble of deep peace.",
-      "Mantra japa done. Felt highly energetic and motivated today.",
-      "Completed Hanuman Chalisa in the evening. Restored mental resilience.",
-      "Sadhana done during Brahma Muhurta. High focus, no distractions.",
-      "Offered Sri Suktam recitations during twilight. Felt a strong wave of gratitude.",
-      "A quiet, simple practice session. Consistency is key.",
-      "Readings complete. Documenting observations of increased mindfulness."
-    ]);
-
-    const cleanLogs: SadhanaLogs = {};
-    let removedCount = 0;
-
-    Object.entries(store.logs || {}).forEach(([dateStr, log]) => {
-      if (log.notes && sampleNotes.has(log.notes.trim())) {
-        removedCount++;
-        return;
-      }
-
-      const keys = Object.keys(log.completed || {});
-      const isSamplePattern = keys.length === 5 && 
-        keys.includes('hanuman_chalisa') && 
-        keys.includes('sidhkunjika_stotra') && 
-        keys.includes('navarna_mantra') && 
-        keys.includes('deviatharvashirsha') && 
-        keys.includes('sri_suktam');
-
-      const navarnaReps = log.counts?.['navarna_mantra'] || 0;
-      if (isSamplePattern && (navarnaReps === 108 || navarnaReps === 324 || navarnaReps === 1 || navarnaReps === 3)) {
-        removedCount++;
-        return;
-      }
-
-      cleanLogs[dateStr] = log;
-    });
-
-    const cleanSankalps = (store.sankalps || []).filter(
-      s => s.id !== 'sankalp_durga' && s.id !== 'sankalp_hanuman'
-    );
-
-    if (removedCount === 0 && cleanSankalps.length === (store.sankalps || []).length) {
-      alert('No sample demo logs found in your account. All your current entries are 100% real!');
-      return;
-    }
-
-    if (confirm(`Found ${removedCount} sample test log entries. Would you like to remove these sample entries while keeping 100% of your real logged practices?`)) {
-      const cleanStore: SadhanaStore = {
-        ...store,
-        sankalps: cleanSankalps,
-        logs: cleanLogs,
-        purgedMockLogs: true,
-        purgedMockV1: true
-      };
-      setStore(cleanStore);
-      if (currentUser) {
-        await saveUserStoreToFirestore(currentUser.uid, cleanStore);
-        saveStore(cleanStore, currentUser.uid);
-      } else {
-        saveStore(cleanStore, null);
-      }
-      alert(`Successfully removed ${removedCount} sample test entries! All your real practice logs have been preserved.`);
-    }
-  };
-
-  const handleImportLogs = async (importedLogs: SadhanaLogs) => {
-    const updatedStore: SadhanaStore = {
-      ...store,
-      logs: importedLogs
-    };
-    setStore(updatedStore);
-    if (currentUser) {
-      await saveUserStoreToFirestore(currentUser.uid, updatedStore);
-      saveStore(updatedStore, currentUser.uid);
-    } else {
-      saveStore(updatedStore, null);
-    }
-    alert('Backup logs successfully imported!');
-  };
-
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
     setIsModalOpen(true);
@@ -504,7 +433,6 @@ function App() {
 
   const displaySadhanas = store.sadhanas;
   const stats = calculateDashboardStats(displaySadhanas, store.logs);
-  const auraState = calculateAuraState(store.logs, displaySadhanas);
   const selectedDateStr = formatDateString(selectedDate);
   const selectedDayLog = store.logs[selectedDateStr];
 
@@ -569,11 +497,11 @@ function App() {
         </div>
 
         {/* Center: Tabs selector */}
-        <nav className="flex p-0.5 rounded-xl bg-[#1e1c1a]/60 border border-white/[0.04] shadow-inner max-w-lg w-full sm:w-auto justify-between items-center gap-0.5">
+        <nav className="flex p-0.5 rounded-xl bg-[#1e1c1a]/60 border border-white/[0.04] shadow-inner max-w-md w-full sm:w-auto justify-between items-center gap-0.5">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'dashboard'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -587,7 +515,7 @@ function App() {
           <button
             onClick={() => setActiveTab('vows')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'vows'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -601,7 +529,7 @@ function App() {
           <button
             onClick={() => setActiveTab('practices')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'practices'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -611,28 +539,11 @@ function App() {
             <BarChart3 className="w-3.5 h-3.5" />
             Practices
           </button>
-
-          <button
-            onClick={() => setActiveTab('aura')}
-            className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
-              ${activeTab === 'aura'
-                ? 'bg-purple-500 text-white shadow shadow-purple-500/20'
-                : 'text-purple-300 hover:text-white hover:bg-purple-500/10'
-              }
-            `}
-          >
-            <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            Aura
-            <span className="text-[9px] px-1.5 py-0.2 rounded-full font-mono bg-purple-950/60 text-purple-200 border border-purple-400/30">
-              {auraState.unlockedLayersCount}/12
-            </span>
-          </button>
           
           <button
             onClick={() => setActiveTab('settings')}
             className={`
-              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-3 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-2 sm:px-4 text-[11px] sm:text-xs font-semibold rounded-lg transition-all duration-200
               ${activeTab === 'settings'
                 ? 'bg-sadhana-gold text-black shadow'
                 : 'text-slate-400 hover:text-white hover:bg-white/[0.01]'
@@ -645,7 +556,7 @@ function App() {
         </nav>
 
         {/* Right Side: Account status/Sync actions */}
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-center sm:justify-end text-[10px] font-sans text-slate-400 shrink-0">
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end text-[10px] font-sans text-slate-400 shrink-0">
           {isCloudSyncing ? (
             <div className="flex items-center gap-1.5 py-1 px-2.5 rounded bg-white/[0.01] border border-white/[0.03]">
               <Loader2 className="w-3 h-3 animate-spin text-sadhana-gold-accent" />
@@ -742,17 +653,6 @@ function App() {
               onUpdate={handleUpdateSadhana}
               onDelete={handleDeleteSadhana}
               isReferencedInSankalp={isReferencedInSankalp}
-            />
-          </div>
-        )}
-
-        {/* Tab 4: Aura & Spiritual Profile */}
-        {activeTab === 'aura' && (
-          <div className="animate-fade-in">
-            <AuraView
-              logs={store.logs}
-              sadhanas={displaySadhanas}
-              username={store.username}
             />
           </div>
         )}
@@ -862,12 +762,7 @@ function App() {
                 </div>
               </div>
 
-              {/* Data Backup & Sample Data Controls */}
-              <DataControls
-                logs={store.logs}
-                onImport={handleImportLogs}
-                onClearSampleData={handleClearSampleData}
-              />
+
 
             </div>
           </div>

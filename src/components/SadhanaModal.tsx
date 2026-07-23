@@ -292,18 +292,18 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                     >
                                       <Minus className="w-3.5 h-3.5" />
                                     </button>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      value={Math.floor((counts[s.id] ?? MALA_REPS) / MALA_REPS)}
-                                      onChange={e => {
-                                        const malas = Math.max(0, parseInt(e.target.value, 10) || 0);
-                                        const remReps = (counts[s.id] ?? MALA_REPS) % MALA_REPS;
-                                        setCounts(prev => ({ ...prev, [s.id]: malas * MALA_REPS + remReps }));
-                                      }}
-                                      onFocus={e => e.target.select()}
-                                      className="w-14 bg-sadhana-dark border border-purple-500/30 rounded px-1.5 py-0.5 text-center text-sm font-bold text-white outline-none focus:border-purple-400/60 font-mono"
-                                    />
+                                     <input 
+                                       type="number" 
+                                       min="0"
+                                       value={Math.floor((counts[s.id] ?? MALA_REPS) / MALA_REPS)} 
+                                       onChange={(e) => {
+                                         const newMalas = Math.max(0, parseInt(e.target.value) || 0);
+                                         const remainder = (counts[s.id] ?? MALA_REPS) % MALA_REPS;
+                                         setCounts(prev => ({ ...prev, [s.id]: newMalas * MALA_REPS + remainder }));
+                                       }}
+                                       onFocus={(e) => e.target.select()}
+                                       className="w-12 text-center text-sm font-bold text-white font-mono bg-black/40 border border-purple-500/30 rounded py-0.5 outline-none focus:border-purple-400"
+                                     />
                                     <button
                                       onClick={() => {
                                         const cur = counts[s.id] ?? MALA_REPS;
@@ -339,7 +339,6 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                         const val = Math.max(0, parseInt(e.target.value, 10) || 0);
                                         setCounts(prev => ({ ...prev, [s.id]: val }));
                                       }}
-                                      onFocus={e => e.target.select()}
                                       className="w-14 bg-sadhana-dark border border-white/10 rounded px-1.5 py-0.5 text-center text-sm font-bold text-white outline-none focus:border-sadhana-gold/50 font-mono"
                                     />
                                     <button
@@ -383,7 +382,6 @@ export const SadhanaModal: React.FC<SadhanaModalProps> = ({
                                     const val = Math.max(1, parseInt(e.target.value, 10) || 1);
                                     setCounts(prev => ({ ...prev, [s.id]: val }));
                                   }}
-                                  onFocus={e => e.target.select()}
                                   className="w-14 bg-sadhana-dark border border-white/10 rounded px-1.5 py-0.5 text-center text-sm font-bold text-white outline-none focus:border-sadhana-gold/50 font-mono"
                                 />
                                 <button
