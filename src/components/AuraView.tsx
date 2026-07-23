@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Zap, CheckCircle2, Lock, User, UserCheck, Sparkles } from 'lucide-react';
+import { Zap, CheckCircle2, Lock, User, UserCheck } from 'lucide-react';
 import type { SadhanaLogs, SadhanaConfig, AuraLayer } from '../types';
 import { calculateAuraState, SCRIPTURAL_AURA_LAYERS } from '../auraUtils';
 
@@ -9,31 +9,22 @@ interface AuraViewProps {
   username?: string;
 }
 
-// Outstretched Arms Transcendent Silhouette Component (Matching Reference Image)
-const OutstretchedPersonSvg = ({ gender = 'male' }: { gender: 'male' | 'female' }) => {
+// Standing Meditative Person Silhouette SVG Component
+const StandingPersonSvg = ({ gender = 'male' }: { gender: 'male' | 'female' }) => {
   return (
     <svg 
-      viewBox="0 0 340 380" 
-      className="w-72 h-80 sm:w-[420px] sm:h-[480px] relative z-20 drop-shadow-[0_0_30px_rgba(255,255,255,0.95)] animate-pulse"
-      style={{ animationDuration: '4.5s' }}
+      viewBox="0 0 200 320" 
+      className="w-36 h-60 sm:w-48 sm:h-80 relative z-20 drop-shadow-[0_0_20px_rgba(255,255,255,0.95)] animate-pulse"
+      style={{ animationDuration: '4s' }}
     >
       <defs>
-        {/* Core Heart Radiance Radial Gradient */}
-        <radialGradient id="heartCoreRadiance" cx="50%" cy="38%" r="45%">
+        <radialGradient id="standingBodyGlow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-          <stop offset="25%" stopColor="#38bdf8" stopOpacity="0.9" />
-          <stop offset="60%" stopColor="#a855f7" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          <stop offset="70%" stopColor="#ffffff" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.6" />
         </radialGradient>
-
-        <radialGradient id="bodySkinGlow" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-          <stop offset="50%" stopColor="#e2e8f0" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.5" />
-        </radialGradient>
-
-        <filter id="intenseWhiteGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="6" result="blur" />
+        <filter id="neonWhiteGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -41,101 +32,88 @@ const OutstretchedPersonSvg = ({ gender = 'male' }: { gender: 'male' | 'female' 
         </filter>
       </defs>
 
-      {/* Radiant Head Crown Halo (Prabhamandala) */}
-      <circle cx="170" cy="50" r="32" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.85" />
-      <circle cx="170" cy="50" r="22" fill="rgba(56, 189, 248, 0.25)" stroke="#ffffff" strokeWidth="1" />
-
-      {/* Head tilted slightly upwards */}
-      <ellipse cx="170" cy="50" rx="15" ry="19" fill="url(#bodySkinGlow)" stroke="#ffffff" strokeWidth="1.5" filter="url(#intenseWhiteGlow)" />
+      {/* Head Prabhamandala Halo */}
+      <circle cx="100" cy="45" r="26" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.85" />
       
-      {/* Hair Bun / Top Accent */}
+      {/* Head */}
+      <circle cx="100" cy="45" r="16" fill="url(#standingBodyGlow)" stroke="#ffffff" strokeWidth="1.5" filter="url(#neonWhiteGlow)" />
+      
+      {/* Hair Top Knot / Accent */}
       {gender === 'female' ? (
-        <path d="M160,33 C155,20 185,20 180,33 Z" fill="#ffffff" opacity="0.9" />
+        <path d="M92,31 C88,18 112,18 108,31 Z" fill="#ffffff" opacity="0.9" />
       ) : (
-        <circle cx="170" cy="30" r="5" fill="#ffffff" opacity="0.9" />
+        <circle cx="100" cy="26" r="4.5" fill="#ffffff" opacity="0.9" />
       )}
 
       {/* Neck */}
-      <path d="M165,68 L175,68 L176,80 L164,80 Z" fill="#ffffff" filter="url(#intenseWhiteGlow)" />
+      <path d="M96,60 L104,60 L105,70 L95,70 Z" fill="#ffffff" filter="url(#neonWhiteGlow)" />
 
-      {/* Torso with Blazing Heart Core Light (Matching Reference Image) */}
+      {/* Torso & Shoulders */}
       <path 
-        d="M170,80 C195,83 208,98 215,115 L200,195 C190,205 180,208 170,208 C160,208 150,205 140,195 L125,115 C132,98 145,83 170,80 Z" 
-        fill="url(#bodySkinGlow)" 
+        d="M100,70 C122,72 134,84 132,125 L124,175 C116,180 108,182 100,182 C92,182 84,180 76,175 L68,125 C66,84 78,72 100,70 Z" 
+        fill="url(#standingBodyGlow)" 
         stroke="#ffffff" 
         strokeWidth="1.5" 
-        filter="url(#intenseWhiteGlow)"
+        filter="url(#neonWhiteGlow)"
       />
 
-      {/* OUTSTRETCHED ARMS REACHING LATERALLY (T-Pose Receptive Open Posture) */}
-      {/* Left Outstretched Arm */}
+      {/* Standing Left & Right Arms resting at sides */}
       <path 
-        d="M135,92 C105,98 60,110 32,118 C24,120 20,114 26,108 C58,96 108,86 142,84 Z" 
-        fill="url(#bodySkinGlow)" 
-        stroke="#ffffff" 
-        strokeWidth="1.5" 
-        filter="url(#intenseWhiteGlow)"
-      />
-      {/* Left Outstretched Hand & Open Fingers */}
-      <path d="M28,116 C18,120 16,112 24,106 Z" fill="#ffffff" filter="url(#intenseWhiteGlow)" />
-
-      {/* Right Outstretched Arm */}
-      <path 
-        d="M205,92 C235,98 280,110 308,118 C316,120 320,114 314,108 C282,96 232,86 198,84 Z" 
-        fill="url(#bodySkinGlow)" 
-        stroke="#ffffff" 
-        strokeWidth="1.5" 
-        filter="url(#intenseWhiteGlow)"
-      />
-      {/* Right Outstretched Hand & Open Fingers */}
-      <path d="M312,116 C322,120 324,112 316,106 Z" fill="#ffffff" filter="url(#intenseWhiteGlow)" />
-
-      {/* Legs Floating Together */}
-      <path 
-        d="M148,200 L152,320 L167,320 L169,200 Z" 
-        fill="url(#bodySkinGlow)" 
-        stroke="#ffffff" 
-        strokeWidth="1.5" 
-        filter="url(#intenseWhiteGlow)"
+        d="M68,74 C60,95 56,130 58,165 C60,172 65,172 67,164 C64,135 68,100 76,82 Z" 
+        fill="#ffffff" 
+        filter="url(#neonWhiteGlow)"
       />
       <path 
-        d="M171,200 L173,320 L188,320 L192,200 Z" 
-        fill="url(#bodySkinGlow)" 
-        stroke="#ffffff" 
-        strokeWidth="1.5" 
-        filter="url(#intenseWhiteGlow)"
+        d="M132,74 C140,95 144,130 142,165 C140,172 135,172 133,164 C136,135 132,100 124,82 Z" 
+        fill="#ffffff" 
+        filter="url(#neonWhiteGlow)"
       />
 
-      {/* Feet Floating Downwards */}
-      <path d="M152,320 C154,334 167,334 167,320 Z" fill="#ffffff" filter="url(#intenseWhiteGlow)" />
-      <path d="M173,320 C175,334 188,334 188,320 Z" fill="#ffffff" filter="url(#intenseWhiteGlow)" />
+      {/* Standing Legs */}
+      <path 
+        d="M78,175 L80,270 L96,270 L97,175 Z" 
+        fill="url(#standingBodyGlow)" 
+        stroke="#ffffff" 
+        strokeWidth="1.5" 
+        filter="url(#neonWhiteGlow)"
+      />
+      <path 
+        d="M103,175 L104,270 L120,270 L122,175 Z" 
+        fill="url(#standingBodyGlow)" 
+        stroke="#ffffff" 
+        strokeWidth="1.5" 
+        filter="url(#neonWhiteGlow)"
+      />
 
-      {/* BLAZING HEART CENTER ENERGY BURST (Matching Reference Image) */}
-      <circle cx="170" cy="120" r="42" fill="url(#heartCoreRadiance)" opacity="0.9" className="animate-pulse" />
-      <circle cx="170" cy="120" r="16" fill="#ffffff" filter="url(#intenseWhiteGlow)" />
-      <circle cx="170" cy="120" r="6" fill="#ffffff" className="animate-ping" style={{ animationDuration: '2.5s' }} />
+      {/* Feet */}
+      <path d="M76,270 C76,278 94,278 96,270 Z" fill="#ffffff" filter="url(#neonWhiteGlow)" />
+      <path d="M104,270 C104,278 122,278 124,270 Z" fill="#ffffff" filter="url(#neonWhiteGlow)" />
 
-      {/* Subtle Central Sushumna Nadi Line */}
-      <line x1="170" y1="30" x2="170" y2="320" stroke="#ffffff" strokeWidth="1" strokeDasharray="4 4" opacity="0.75" />
+      {/* Central Sushumna Nadi Line */}
+      <line x1="100" y1="30" x2="100" y2="265" stroke="#ffffff" strokeWidth="1" strokeDasharray="4 4" opacity="0.7" />
+
+      {/* Heart Center Sparkle */}
+      <circle cx="100" cy="115" r="4" fill="#ffffff" className="animate-ping" style={{ animationDuration: '3s' }} />
+      <circle cx="100" cy="115" r="2.5" fill="#ffffff" />
     </svg>
   );
 };
 
-// Radiating Background Rays Component (Full Viewport Coverage)
-const FullScreenStarRays = ({ color = '#38bdf8' }: { color?: string }) => {
+// Radiating Sunburst Starbeams Component
+const StarburstRays = ({ color = '#ec4899', opacity = 0.4 }: { color?: string; opacity?: number }) => {
   return (
     <div 
-      className="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-1000 animate-spin-slow opacity-50"
-      style={{ animationDuration: '50s' }}
+      className="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-700 animate-spin-slow opacity-60"
+      style={{ animationDuration: '40s' }}
     >
-      {[...Array(16)].map((_, i) => (
+      {[...Array(12)].map((_, i) => (
         <div
           key={i}
-          className="absolute w-4 h-[220vh] origin-center rounded-full blur-[10px]"
+          className="absolute w-2.5 h-[140%] origin-center rounded-full blur-[6px]"
           style={{
-            transform: `rotate(${i * 22.5}deg)`,
-            background: `linear-gradient(to top, transparent 5%, ${color} 50%, transparent 95%)`,
-            opacity: 0.4
+            transform: `rotate(${i * 30}deg)`,
+            background: `linear-gradient(to top, transparent 10%, ${color} 50%, transparent 90%)`,
+            opacity
           }}
         />
       ))}
@@ -153,114 +131,128 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
 
   const visualUnlockedCount = isPreviewing ? previewLayer.layerNumber : auraState.unlockedLayersCount;
 
+  const containerHeightVh = Math.min(85, 50 + (visualUnlockedCount / 12) * 30);
+
   return (
-    <div className="w-full min-h-[calc(100vh-70px)] relative overflow-hidden bg-[#07080c] text-white flex flex-col justify-between items-center p-4 sm:p-8 animate-fade-in select-none">
+    <div className="space-y-8 animate-fade-in pb-16">
       
-      {/* Dynamic Full-Bleed Background Aura Fill (Spans entire website viewport) */}
-      <div 
-        className="absolute inset-0 pointer-events-none transition-all duration-1000 blur-[100px] opacity-60"
-        style={{
-          background: `radial-gradient(ellipse at center, ${activeDisplayLayer.colorHex} 0%, rgba(168,85,247,0.3) 40%, rgba(14,165,233,0.15) 70%, #07080c 100%)`
-        }}
-      />
-
-      {/* Radiating Starburst Rays */}
-      <FullScreenStarRays color={activeDisplayLayer.colorHex} />
-
-      {/* ── TOP UNBOXED FLOATING HEADER ────────────────────────────────────── */}
-      <div className="relative z-30 w-full max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+      {/* Top Banner Header */}
+      <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-white/[0.06] bg-gradient-to-r from-purple-950/20 via-sadhana-dark to-amber-950/20 relative overflow-hidden">
+        <div 
+          className="absolute -right-20 -top-20 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-700"
+          style={{ backgroundColor: activeDisplayLayer.colorHex }} 
+        />
         
-        {/* Left Title & Status */}
-        <div className="text-center sm:text-left space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest border"
-               style={{
-                 borderColor: `${activeDisplayLayer.colorHex}50`,
-                 backgroundColor: 'rgba(0,0,0,0.5)',
-                 color: activeDisplayLayer.colorHex
-               }}>
-            <Zap className="w-3.5 h-3.5 animate-pulse" />
-            Dwadasa Abha • 12 Scriptural Layers
-          </div>
-          <h2 className="text-xl sm:text-2xl font-serif font-bold text-white tracking-wide">
-            {username ? `${username}'s Tejas Aura` : 'Dwadasa Tejas Aura'}
-          </h2>
-        </div>
-
-        {/* Center/Right Minimal Stats Pills & Gender Toggle */}
-        <div className="flex items-center gap-3 flex-wrap justify-center sm:justify-end">
-          
-          {/* Gender Silhouette Toggle */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-black/60 border border-white/10 backdrop-blur-md">
-            <button
-              onClick={() => setGender('male')}
-              type="button"
-              className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                gender === 'male' 
-                  ? 'bg-white/20 text-white border border-white/30 shadow' 
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <User className="w-3 h-3" />
-              Sadhak
-            </button>
-            <button
-              onClick={() => setGender('female')}
-              type="button"
-              className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all ${
-                gender === 'female' 
-                  ? 'bg-white/20 text-white border border-white/30 shadow' 
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <UserCheck className="w-3 h-3" />
-              Sadhika
-            </button>
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 justify-between text-center md:text-left">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest border mb-3"
+                 style={{
+                   borderColor: `${activeDisplayLayer.colorHex}40`,
+                   backgroundColor: `${activeDisplayLayer.colorHex}15`,
+                   color: activeDisplayLayer.colorHex
+                 }}>
+              <Zap className="w-3.5 h-3.5 animate-pulse" />
+              Dwadasa Abha • 12 Scriptural Aura Layers
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-wide">
+              {username ? `${username}'s Tejas Aura` : 'Dwadasa Tejas Aura'}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-xl mt-1 font-sans leading-relaxed">
+              As described in subtle body scriptures (*Yoga Upanishads & Tantras*), your spiritual aura expands outwards contouring your body as your Sadhana recitations increase.
+            </p>
           </div>
 
-          {/* Minimal Floating Stats */}
-          <div className="flex items-center gap-2 text-xs font-mono bg-black/60 px-3.5 py-1.5 rounded-xl border border-white/10 backdrop-blur-md">
-            <span className="text-amber-400 font-bold">{auraState.unlockedLayersCount}/12 Layers</span>
-            <span className="text-slate-600">|</span>
-            <span className="text-purple-300 font-bold">{auraState.totalMalas} Malas</span>
-            <span className="text-slate-600">|</span>
-            <span className="text-white font-bold">{auraState.totalReps.toLocaleString()} Reps</span>
+          <div className="flex gap-3 shrink-0">
+            <div className="glass-panel px-4 py-3 rounded-xl border border-white/10 text-center min-w-[95px]">
+              <div className="text-xl font-bold font-mono text-amber-400">{auraState.unlockedLayersCount} / 12</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium mt-0.5">Aura Layers</div>
+            </div>
+            <div className="glass-panel px-4 py-3 rounded-xl border border-white/10 text-center min-w-[95px]">
+              <div className="text-xl font-bold font-mono text-purple-300">{auraState.totalMalas}</div>
+              <div className="text-[10px] text-purple-400 uppercase tracking-wider font-medium mt-0.5">Total Malas</div>
+            </div>
+            <div className="glass-panel px-4 py-3 rounded-xl border border-white/10 text-center min-w-[95px]">
+              <div className="text-xl font-bold font-mono text-white">{auraState.totalReps.toLocaleString()}</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium mt-0.5">Total Reps</div>
+            </div>
           </div>
-
         </div>
       </div>
 
-      {/* ── CENTER MASTERPIECE: OUTSTRETCHED SILHOUETTE & FULL-BLEED AURA ────── */}
-      <div className="relative z-20 w-full flex-1 flex flex-col items-center justify-center my-4 min-h-[460px] sm:min-h-[540px]">
+      {/* Main Feature: Standing White Figure & Organic Expanding Body-Contour Aura (Full Mobile/App Coverage) */}
+      <div 
+        className="glass-panel rounded-3xl p-4 sm:p-12 border border-white/[0.06] bg-[#0c0d12] flex flex-col items-center justify-center relative overflow-hidden transition-all duration-700 w-full"
+        style={{ minHeight: `${containerHeightVh}vh` }}
+      >
         
-        {/* Dynamic Expanding Body-Contour Aura Halos */}
-        <div className="relative flex items-center justify-center w-full h-full">
+        {/* Gender Silhouette Toggle */}
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 p-1 rounded-xl bg-black/50 border border-white/10 backdrop-blur-md">
+          <button
+            onClick={() => setGender('male')}
+            type="button"
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              gender === 'male' 
+                ? 'bg-white/20 text-white shadow border border-white/20' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            Sadhak (Male)
+          </button>
+          <button
+            onClick={() => setGender('female')}
+            type="button"
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              gender === 'female' 
+                ? 'bg-white/20 text-white shadow border border-white/20' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <UserCheck className="w-3.5 h-3.5" />
+            Sadhika (Female)
+          </button>
+        </div>
+
+        {/* Ambient Radial Gradient Fill behind full screen */}
+        <div 
+          className="absolute inset-0 pointer-events-none transition-all duration-1000 opacity-40 blur-[80px]"
+          style={{
+            background: `radial-gradient(ellipse at center, ${activeDisplayLayer.colorHex} 0%, rgba(139,92,246,0.2) 45%, transparent 80%)`
+          }}
+        />
+
+        {/* Radiating Starburst Beams (As shown in Reference Image) */}
+        <StarburstRays color={activeDisplayLayer.colorHex} opacity={0.35} />
+
+        {/* Dynamic Expanding Aura Field Wrapper */}
+        <div className="relative z-10 flex items-center justify-center my-4 w-full h-full min-h-[380px] sm:min-h-[480px]">
           
-          {/* Render Organic Contour Halos around Outstretched Figure */}
+          {/* Smooth Organic Concentric Body-Contour Aura Bands */}
           {SCRIPTURAL_AURA_LAYERS.map((layer) => {
             const isUnlocked = layer.layerNumber <= visualUnlockedCount;
-            // Width and Height scaled dynamically to fill website viewport
-            const widthPx = (220 + layer.layerNumber * 38) * (isUnlocked ? 1 : 0.95);
-            const heightPx = (260 + layer.layerNumber * 32) * (isUnlocked ? 1 : 0.95);
+            // Expand width and height based on layer number and total unlocked radius
+            const widthPx = (140 + layer.layerNumber * 24) * (isUnlocked ? 1 : 0.95);
+            const heightPx = (240 + layer.layerNumber * 26) * (isUnlocked ? 1 : 0.95);
             const zIndex = 20 - layer.layerNumber;
 
             return (
               <div
                 key={layer.layerNumber}
-                className={`absolute rounded-[140px] transition-all duration-1000 flex items-center justify-center ${
-                  isUnlocked ? 'animate-pulse' : 'border-dashed opacity-10'
+                className={`absolute rounded-[110px] transition-all duration-1000 flex items-center justify-center ${
+                  isUnlocked ? 'animate-pulse' : 'border-dashed opacity-15'
                 }`}
                 style={{
                   width: `${widthPx}px`,
                   height: `${heightPx}px`,
                   zIndex,
-                  backgroundColor: isUnlocked ? `${layer.colorHex}18` : 'transparent',
-                  borderColor: isUnlocked ? layer.colorHex : 'rgba(255,255,255,0.1)',
-                  borderWidth: isUnlocked ? '3.5px' : '1px',
+                  backgroundColor: isUnlocked ? `${layer.colorHex}15` : 'transparent',
+                  borderColor: isUnlocked ? layer.colorHex : 'rgba(255,255,255,0.15)',
+                  borderWidth: isUnlocked ? '3px' : '1px',
                   filter: isUnlocked 
-                    ? `blur(${Math.min(22, 6 + layer.layerNumber * 1.4)}px) drop-shadow(0 0 ${16 + layer.layerNumber * 3}px ${layer.colorHex})` 
+                    ? `blur(${Math.min(18, 4 + layer.layerNumber * 1.2)}px) drop-shadow(0 0 ${12 + layer.layerNumber * 2}px ${layer.colorHex})` 
                     : 'none',
                   boxShadow: isUnlocked 
-                    ? `0 0 ${25 + layer.layerNumber * 6}px ${layer.glowColor}, inset 0 0 ${20 + layer.layerNumber * 4}px ${layer.colorHex}35` 
+                    ? `0 0 ${20 + layer.layerNumber * 5}px ${layer.glowColor}, inset 0 0 ${15 + layer.layerNumber * 3}px ${layer.colorHex}30` 
                     : 'none',
                   animationDuration: `${3.5 + (layer.layerNumber % 4)}s`
                 }}
@@ -268,16 +260,16 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
             );
           })}
 
-          {/* Crisp Overlay Contour Lines */}
+          {/* Crisp Overlay Contour Rings (Unblurred inner borders matching reference image) */}
           {SCRIPTURAL_AURA_LAYERS.map((layer) => {
             if (layer.layerNumber > visualUnlockedCount) return null;
-            const widthPx = 215 + layer.layerNumber * 38;
-            const heightPx = 255 + layer.layerNumber * 32;
+            const widthPx = 135 + layer.layerNumber * 24;
+            const heightPx = 235 + layer.layerNumber * 26;
 
             return (
               <div
                 key={`crisp_${layer.layerNumber}`}
-                className="absolute rounded-[140px] pointer-events-none transition-all duration-700 opacity-50 border"
+                className="absolute rounded-[110px] pointer-events-none transition-all duration-700 opacity-60 border"
                 style={{
                   width: `${widthPx}px`,
                   height: `${heightPx}px`,
@@ -288,35 +280,35 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
             );
           })}
 
-          {/* Outstretched Figure Silhouette (Matching Reference Image) */}
-          <OutstretchedPersonSvg gender={gender} />
+          {/* Central Standing Luminous White Silhouette */}
+          <StandingPersonSvg gender={gender} />
         </div>
 
-        {/* Minimal Unboxed Floating Layer Title & Description */}
-        <div className="relative z-30 text-center max-w-xl mt-4 space-y-1.5 bg-black/60 px-6 py-4 rounded-2xl border border-white/10 backdrop-blur-md">
+        {/* Active Layer Scriptural Info Card */}
+        <div className="relative z-20 text-center max-w-lg mt-4 space-y-2 bg-black/60 p-4 sm:p-5 rounded-2xl border border-white/10 backdrop-blur-md w-full">
           <div className="flex items-center justify-center gap-2">
             <span 
               className="w-3.5 h-3.5 rounded-full inline-block shadow-md"
-              style={{ backgroundColor: activeDisplayLayer.colorHex, boxShadow: `0 0 12px ${activeDisplayLayer.colorHex}` }}
+              style={{ backgroundColor: activeDisplayLayer.colorHex, boxShadow: `0 0 10px ${activeDisplayLayer.colorHex}` }}
             />
-            <h3 className="text-xl sm:text-2xl font-serif font-bold text-white">
+            <h3 className="text-xl font-serif font-bold text-white">
               Layer {activeDisplayLayer.layerNumber}: {activeDisplayLayer.name}
             </h3>
-            <span className="text-sm text-slate-400 font-serif">
+            <span className="text-xs text-slate-400 font-serif">
               ({activeDisplayLayer.sanskritName})
             </span>
           </div>
 
-          <p className="text-xs font-semibold uppercase tracking-widest text-purple-300">
+          <p className="text-xs font-semibold text-purple-300 uppercase tracking-widest">
             {activeDisplayLayer.title}
           </p>
 
-          <p className="text-xs text-slate-200 leading-relaxed font-sans max-w-md mx-auto">
+          <p className="text-xs text-slate-300 leading-relaxed font-sans max-w-md mx-auto">
             {activeDisplayLayer.meaning}
           </p>
 
           {isPreviewing && (
-            <div className="pt-1">
+            <div className="pt-2">
               <button
                 onClick={() => setPreviewLayer(null)}
                 className="text-xs text-amber-400 hover:text-white underline decoration-amber-400/50 underline-offset-4 font-semibold transition-colors"
@@ -328,32 +320,57 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
         </div>
       </div>
 
-      {/* ── BOTTOM UNBOXED FLOATING LAYER SELECTOR BAR ────────────────────────── */}
-      <div className="relative z-30 w-full max-w-6xl space-y-3 pt-2">
-        
-        {/* Next Layer Progress Bar Overlay */}
-        {auraState.nextLayer && (
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs font-mono bg-black/60 px-4 py-2 rounded-xl border border-white/10 backdrop-blur-md">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              <span className="text-slate-300">
-                Next: <strong className="text-white font-serif">{auraState.nextLayer.name} ({auraState.nextLayer.sanskritName})</strong>
-              </span>
-            </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <div className="w-32 bg-white/10 rounded-full h-2 overflow-hidden border border-white/20">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 via-amber-400 to-emerald-400 rounded-full transition-all duration-700" 
-                  style={{ width: `${auraState.progressPercentToNext}%` }}
-                />
-              </div>
-              <span className="text-amber-300 font-bold">{auraState.repsNeededForNext.toLocaleString()} reps needed</span>
-            </div>
+      {/* Progress to Next Scriptural Layer */}
+      <div className="glass-panel rounded-2xl p-6 border border-white/[0.06] space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Aura Expansion Progress</span>
+            <h4 className="text-base font-serif font-semibold text-white">
+              {auraState.nextLayer 
+                ? `Next Scriptural Layer: Layer ${auraState.nextLayer.layerNumber} — ${auraState.nextLayer.name} (${auraState.nextLayer.sanskritName})` 
+                : 'All 12 Scriptural Aura Layers Fully Illuminated!'}
+            </h4>
           </div>
-        )}
+          {auraState.nextLayer && (
+            <span className="text-xs font-mono font-semibold text-amber-300 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+              {auraState.repsNeededForNext.toLocaleString()} reps needed to unlock Layer {auraState.nextLayer.layerNumber}
+            </span>
+          )}
+        </div>
 
-        {/* Unboxed Floating 12 Scriptural Layers Selector Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none justify-start sm:justify-center w-full">
+        {/* Progress Bar */}
+        <div className="space-y-1.5">
+          <div className="w-full bg-white/[0.05] rounded-full h-3.5 p-0.5 border border-white/10 overflow-hidden">
+            <div 
+              className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-purple-500 via-amber-400 via-emerald-400 to-cyan-400 shadow-md"
+              style={{ width: `${auraState.progressPercentToNext}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[11px] font-mono text-slate-400">
+            <span>Layer {auraState.currentHighestLayer.layerNumber}: {auraState.currentHighestLayer.name}</span>
+            <span className="font-bold text-white">{auraState.progressPercentToNext}%</span>
+            <span>{auraState.nextLayer ? `Layer ${auraState.nextLayer.layerNumber}: ${auraState.nextLayer.name}` : 'Max Layer 12'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Scriptural Dwadasa Tejas Grid (All 12 Layers) */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-sm font-serif font-bold text-white">
+              Dwadasa Abha • The 12 Scriptural Aura Layers
+            </h3>
+            <p className="text-xs text-slate-400 font-sans mt-0.5">
+              Click any layer to preview its visual energy field on the standing figure above.
+            </p>
+          </div>
+          <span className="text-xs font-mono text-purple-300 bg-purple-500/10 px-3 py-1 rounded-lg border border-purple-500/20">
+            {auraState.unlockedLayersCount} / 12 Unlocked
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {SCRIPTURAL_AURA_LAYERS.map((layer) => {
             const isUnlocked = layer.layerNumber <= auraState.unlockedLayersCount;
             const isCurrentHighest = auraState.currentHighestLayer.layerNumber === layer.layerNumber;
@@ -364,32 +381,64 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
                 key={layer.layerNumber}
                 onClick={() => setPreviewLayer(layer)}
                 type="button"
-                className={`px-3 py-2 rounded-xl border text-left transition-all shrink-0 flex items-center gap-2 backdrop-blur-md ${
+                className={`p-5 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group ${
                   isSelectedPreview
-                    ? 'border-sadhana-gold bg-sadhana-gold/20 text-white shadow-lg ring-1 ring-sadhana-gold'
+                    ? 'border-sadhana-gold bg-sadhana-gold/10 shadow-xl shadow-sadhana-gold/10 ring-1 ring-sadhana-gold'
                     : isUnlocked
-                    ? 'border-white/15 bg-black/60 text-slate-200 hover:bg-white/10'
-                    : 'border-white/5 bg-black/40 text-slate-500 opacity-60 hover:opacity-80'
+                    ? 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]'
+                    : 'border-white/[0.04] bg-white/[0.003] opacity-60 hover:opacity-80'
                 }`}
               >
-                <span 
-                  className="w-2.5 h-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: layer.colorHex, boxShadow: isUnlocked ? `0 0 6px ${layer.colorHex}` : 'none' }}
-                />
-                <div className="text-[11px] font-mono leading-tight">
-                  <div className="font-bold flex items-center gap-1">
-                    <span>L{layer.layerNumber}</span>
-                    {isCurrentHighest && <span className="text-[9px] text-purple-300 font-sans uppercase">★</span>}
-                    {!isCurrentHighest && isUnlocked && <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
-                    {!isUnlocked && <Lock className="w-2.5 h-2.5 text-slate-500" />}
+                {/* Top Header */}
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center gap-2">
+                      <span 
+                        className="w-4 h-4 rounded-full shrink-0 shadow-md"
+                        style={{ backgroundColor: layer.colorHex, boxShadow: isUnlocked ? `0 0 10px ${layer.colorHex}` : 'none' }}
+                      />
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">
+                        Layer {layer.layerNumber}
+                      </span>
+                    </div>
+
+                    {isCurrentHighest && (
+                      <span className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        Active Layer
+                      </span>
+                    )}
+                    {!isCurrentHighest && isUnlocked && (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    )}
+                    {!isUnlocked && (
+                      <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    )}
                   </div>
-                  <div className="text-[10px] text-slate-300 font-serif font-normal">{layer.sanskritName}</div>
+
+                  <h4 className="text-base font-serif font-bold text-white group-hover:text-sadhana-gold transition-colors">
+                    {layer.name} <span className="text-xs text-slate-400 font-normal font-serif">({layer.sanskritName})</span>
+                  </h4>
+
+                  <p className="text-xs font-semibold text-purple-300 mt-0.5">
+                    {layer.title}
+                  </p>
+
+                  <p className="text-xs text-slate-400 leading-relaxed font-sans mt-2">
+                    {layer.meaning}
+                  </p>
+                </div>
+
+                {/* Bottom Threshold */}
+                <div className="mt-4 pt-3 border-t border-white/[0.05] flex justify-between items-center text-xs font-mono text-slate-400">
+                  <span>Requirement:</span>
+                  <span className="font-bold text-white">
+                    {layer.minReps === 0 ? 'Default (0 Reps)' : `${layer.minReps.toLocaleString()} Reps (${Math.floor(layer.minReps / 108)} Malas)`}
+                  </span>
                 </div>
               </button>
             );
           })}
         </div>
-
       </div>
 
     </div>
