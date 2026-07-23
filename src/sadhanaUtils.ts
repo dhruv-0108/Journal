@@ -104,14 +104,54 @@ export const getLocalStorageKey = (uid?: string | null): string => {
   return GUEST_STORAGE_KEY;
 };
 
+const MOCK_NOTES_LIST = new Set([
+  "Chanting Sidh Kunjika Stotra before sunrise created a bubble of deep peace.",
+  "Mantra japa done. Felt highly energetic and motivated today.",
+  "Completed Hanuman Chalisa in the evening. Restored mental resilience.",
+  "Sadhana done during Brahma Muhurta. High focus, no distractions.",
+  "Offered Sri Suktam recitations during twilight. Felt a strong wave of gratitude.",
+  "A quiet, simple practice session. Consistency is key.",
+  "Readings complete. Documenting observations of increased mindfulness."
+]);
+
 export const purgeMockLogs = (store: SadhanaStore): SadhanaStore => {
   if (store.purgedMockLogs) return store;
 
-  // Complete system purge of legacy sample logs & sample sankalps
+  const cleanLogs: SadhanaStore['logs'] = {};
+  
+  Object.entries(store.logs || {}).forEach(([dateStr, log]) => {
+    // If log note is in MOCK_NOTES_LIST, skip it (mock demo data)
+    if (log.notes && MOCK_NOTES_LIST.has(log.notes.trim())) {
+      return;
+    }
+
+    // Check if log matches mock pattern (all 5 preset items with 108/324 navarna_mantra reps)
+    const keys = Object.keys(log.completed || {});
+    const isMockPresetSet = keys.length === 5 && 
+      keys.includes('hanuman_chalisa') && 
+      keys.includes('sidhkunjika_stotra') && 
+      keys.includes('navarna_mantra') && 
+      keys.includes('deviatharvashirsha') && 
+      keys.includes('sri_suktam');
+
+    const navarnaCount = log.counts?.['navarna_mantra'] || 0;
+    if (isMockPresetSet && (navarnaCount === 108 || navarnaCount === 324 || navarnaCount === 1 || navarnaCount === 3)) {
+      return;
+    }
+
+    // Real user log entry – preserve it 100%!
+    cleanLogs[dateStr] = log;
+  });
+
+  // Preserve real user sankalps, filter out fake demo sankalps
+  const cleanSankalps = (store.sankalps || []).filter(
+    s => s.id !== 'sankalp_durga' && s.id !== 'sankalp_hanuman'
+  );
+
   return {
     ...store,
-    sankalps: [],
-    logs: {},
+    sankalps: cleanSankalps,
+    logs: cleanLogs,
     purgedMockLogs: true
   };
 };
