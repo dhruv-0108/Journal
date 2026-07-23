@@ -8,7 +8,7 @@ import { PracticeStats } from './components/PracticeStats';
 import { AuraView } from './components/AuraView';
 import { calculateAuraState } from './auraUtils';
 import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
-import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps } from './sadhanaUtils';
+import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps, purgeMockLogs } from './sadhanaUtils';
 import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, Zap } from 'lucide-react';
 
 // Firebase imports
@@ -28,25 +28,20 @@ function App() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   
-  const [tempUsernameEdit, setTempUsernameEdit] = useState('');
-
   // Firebase Auth states
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showAuthPage, setShowAuthPage] = useState(false);
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
   const [showGuestGate, setShowGuestGate] = useState(false);
 
+  // Editable display name state
+  const [tempUsernameEdit, setTempUsernameEdit] = useState<string>('');
+
   // 1. Listen to Firebase Auth state & subscribe to real-time Firestore database updates
   useEffect(() => {
     let unsubscribeSnapshot: (() => void) | null = null;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      // Clean up previous real-time snapshot listener
-      if (unsubscribeSnapshot) {
-        unsubscribeSnapshot();
-        unsubscribeSnapshot = null;
-      }
-
       setCurrentUser(user);
 
       if (user) {
@@ -75,6 +70,9 @@ function App() {
             };
           }
 
+          // Purge any legacy sample mock data from user account
+          finalStore = purgeMockLogs(finalStore);
+
           // Auto evaluate expired vows to 'completed' or 'abandoned'
           const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(finalStore.sankalps || [], finalStore.logs || {});
           if (changed) {
@@ -94,8 +92,9 @@ function App() {
               // Ignore local pending writes to prevent loops or overwriting unsaved local changes
               if (metadata.hasPendingWrites) return;
 
-              const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(remoteStore.sankalps || [], remoteStore.logs || {});
-              const finalRemoteStore = changed ? { ...remoteStore, sankalps: updatedSankalps } : remoteStore;
+              const purgedRemote = purgeMockLogs(remoteStore);
+              const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(purgedRemote.sankalps || [], purgedRemote.logs || {});
+              const finalRemoteStore = changed ? { ...purgedRemote, sankalps: updatedSankalps } : purgedRemote;
 
               setStore(prev => {
                 // Prevent redundant state updates if store data is identical
@@ -110,18 +109,12 @@ function App() {
               console.error("Real-time Firestore listener error:", err);
             }
           );
-        } catch (err) {
-          console.error("Failed to load user document from Cloud Database:", err);
+        } catch (error) {
+          console.error("Failed to load user store from Cloud Database:", error);
         } finally {
           setIsCloudSyncing(false);
         }
       } else {
-        const loadedStore = loadStore(null);
-        const { updatedSankalps, changed } = autoEvaluateExpiredSankalps(loadedStore.sankalps || [], loadedStore.logs || {});
-        const finalStore = changed ? { ...loadedStore, sankalps: updatedSankalps } : loadedStore;
-        if (changed) saveStore(finalStore, null);
-        setStore(finalStore);
-        setIsCloudSyncing(false);
       }
     });
 

@@ -104,6 +104,57 @@ export const getLocalStorageKey = (uid?: string | null): string => {
   return GUEST_STORAGE_KEY;
 };
 
+const MOCK_NOTES_LIST = new Set([
+  "Chanting Sidh Kunjika Stotra before sunrise created a bubble of deep peace.",
+  "Mantra japa done. Felt highly energetic and motivated today.",
+  "Completed Hanuman Chalisa in the evening. Restored mental resilience.",
+  "Sadhana done during Brahma Muhurta. High focus, no distractions.",
+  "Offered Sri Suktam recitations during twilight. Felt a strong wave of gratitude.",
+  "A quiet, simple practice session. Consistency is key.",
+  "Readings complete. Documenting observations of increased mindfulness."
+]);
+
+export const purgeMockLogs = (store: SadhanaStore): SadhanaStore => {
+  if (store.purgedMockLogs) return store;
+
+  const cleanLogs: SadhanaStore['logs'] = {};
+  
+  Object.entries(store.logs || {}).forEach(([dateStr, log]) => {
+    // If log note is in MOCK_NOTES_LIST, skip it (mock data)
+    if (log.notes && MOCK_NOTES_LIST.has(log.notes.trim())) {
+      return;
+    }
+
+    // Check if log matches mock pattern (all 5 preset items with 108/324 navarna_mantra reps)
+    const keys = Object.keys(log.completed || {});
+    const isMockPresetSet = keys.length === 5 && 
+      keys.includes('hanuman_chalisa') && 
+      keys.includes('sidhkunjika_stotra') && 
+      keys.includes('navarna_mantra') && 
+      keys.includes('deviatharvashirsha') && 
+      keys.includes('sri_suktam');
+
+    const navarnaCount = log.counts?.['navarna_mantra'] || 0;
+    if (isMockPresetSet && (navarnaCount === 108 || navarnaCount === 324 || navarnaCount === 1 || navarnaCount === 3)) {
+      return;
+    }
+
+    cleanLogs[dateStr] = log;
+  });
+
+  // Remove mock demo sankalps
+  const cleanSankalps = (store.sankalps || []).filter(
+    s => s.id !== 'sankalp_durga' && s.id !== 'sankalp_hanuman'
+  );
+
+  return {
+    ...store,
+    sankalps: cleanSankalps,
+    logs: cleanLogs,
+    purgedMockLogs: true
+  };
+};
+
 export const loadStore = (uid?: string | null): SadhanaStore => {
   try {
     let data: string | null = null;
@@ -142,10 +193,11 @@ export const loadStore = (uid?: string | null): SadhanaStore => {
       if (!parsed.sankalps) parsed.sankalps = [];
       if (!parsed.logs) parsed.logs = {};
       const migrated = migrateStoreToReps(parsed);
+      const purged = purgeMockLogs(migrated);
       if (uid) {
-        saveStore(migrated, uid);
+        saveStore(purged, uid);
       }
-      return migrated;
+      return purged;
     }
     
     // Default initial store if no data found anywhere
@@ -154,7 +206,8 @@ export const loadStore = (uid?: string | null): SadhanaStore => {
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
       logs: {},
-      migratedToReps: true
+      migratedToReps: true,
+      purgedMockLogs: true
     };
     saveStore(initialStore, uid);
     return initialStore;
@@ -165,7 +218,8 @@ export const loadStore = (uid?: string | null): SadhanaStore => {
       sadhanas: DEFAULT_SADHANA_LIST,
       sankalps: [],
       logs: {},
-      migratedToReps: true
+      migratedToReps: true,
+      purgedMockLogs: true
     };
   }
 };

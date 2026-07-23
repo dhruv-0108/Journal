@@ -56,6 +56,7 @@ export interface SadhanaStore {
   sankalps: Sankalp[];
   logs: SadhanaLogs;
   migratedToReps?: boolean;          // Guard flag so one-time migration runs only once
+  purgedMockLogs?: boolean;          // Guard flag so demo mock data is purged from account
 }
 
 export interface TimeframeMetrics {
