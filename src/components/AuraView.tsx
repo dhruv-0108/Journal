@@ -9,22 +9,22 @@ interface AuraViewProps {
   username?: string;
 }
 
-// Meditative Person Silhouette SVG Component (Male / Female in Padmasana)
-const MeditativePersonSvg = ({ gender = 'male' }: { gender: 'male' | 'female' }) => {
+// Standing Meditative Person Silhouette SVG Component
+const StandingPersonSvg = ({ gender = 'male' }: { gender: 'male' | 'female' }) => {
   return (
     <svg 
-      viewBox="0 0 200 240" 
-      className="w-48 h-56 sm:w-60 sm:h-72 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)] animate-pulse"
+      viewBox="0 0 200 320" 
+      className="w-36 h-60 sm:w-48 sm:h-80 relative z-20 drop-shadow-[0_0_20px_rgba(255,255,255,0.95)] animate-pulse"
       style={{ animationDuration: '4s' }}
     >
       <defs>
-        <radialGradient id="bodyGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-          <stop offset="60%" stopColor="#ffffff" stopOpacity="0.75" />
-          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.4" />
+        <radialGradient id="standingBodyGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="70%" stopColor="#ffffff" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0.6" />
         </radialGradient>
-        <filter id="whiteNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+        <filter id="neonWhiteGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
@@ -32,60 +32,92 @@ const MeditativePersonSvg = ({ gender = 'male' }: { gender: 'male' | 'female' })
         </filter>
       </defs>
 
-      {/* Halo / Head Prabhamandala */}
-      <circle cx="100" cy="55" r="32" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.8" />
-      <circle cx="100" cy="55" r="28" fill="rgba(255,255,255,0.15)" stroke="#ffffff" strokeWidth="1" />
-
+      {/* Head Prabhamandala Halo */}
+      <circle cx="100" cy="45" r="26" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.85" />
+      
       {/* Head */}
-      <circle cx="100" cy="55" r="18" fill="url(#bodyGlow)" stroke="#ffffff" strokeWidth="1.5" filter="url(#whiteNeonGlow)" />
-
-      {/* Hair Bun / Shikha Accent */}
+      <circle cx="100" cy="45" r="16" fill="url(#standingBodyGlow)" stroke="#ffffff" strokeWidth="1.5" filter="url(#neonWhiteGlow)" />
+      
+      {/* Hair Top Knot / Accent */}
       {gender === 'female' ? (
-        <path d="M90,40 C85,25 115,25 110,40 Z" fill="#ffffff" opacity="0.9" />
+        <path d="M92,31 C88,18 112,18 108,31 Z" fill="#ffffff" opacity="0.9" />
       ) : (
-        <circle cx="100" cy="34" r="5" fill="#ffffff" opacity="0.9" />
+        <circle cx="100" cy="26" r="4.5" fill="#ffffff" opacity="0.9" />
       )}
 
       {/* Neck */}
-      <path d="M95,72 L105,72 L106,82 L94,82 Z" fill="#ffffff" opacity="0.9" />
+      <path d="M96,60 L104,60 L105,70 L95,70 Z" fill="#ffffff" filter="url(#neonWhiteGlow)" />
 
-      {/* Torso & Shoulders (Meditative Posture) */}
+      {/* Torso & Shoulders */}
       <path 
-        d="M100,82 C125,85 142,98 144,120 L138,160 C125,165 115,168 100,168 C85,168 75,165 62,160 L56,120 C58,98 75,85 100,82 Z" 
-        fill="url(#bodyGlow)" 
+        d="M100,70 C122,72 134,84 132,125 L124,175 C116,180 108,182 100,182 C92,182 84,180 76,175 L68,125 C66,84 78,72 100,70 Z" 
+        fill="url(#standingBodyGlow)" 
         stroke="#ffffff" 
         strokeWidth="1.5" 
-        filter="url(#whiteNeonGlow)"
+        filter="url(#neonWhiteGlow)"
       />
 
-      {/* Crossed Legs (Padmasana Base) */}
+      {/* Standing Left & Right Arms resting at sides */}
       <path 
-        d="M52,145 C40,165 40,185 60,195 C80,202 120,202 140,195 C160,185 160,165 148,145 C135,175 65,175 52,145 Z" 
-        fill="url(#bodyGlow)" 
+        d="M68,74 C60,95 56,130 58,165 C60,172 65,172 67,164 C64,135 68,100 76,82 Z" 
+        fill="#ffffff" 
+        filter="url(#neonWhiteGlow)"
+      />
+      <path 
+        d="M132,74 C140,95 144,130 142,165 C140,172 135,172 133,164 C136,135 132,100 124,82 Z" 
+        fill="#ffffff" 
+        filter="url(#neonWhiteGlow)"
+      />
+
+      {/* Standing Legs */}
+      <path 
+        d="M78,175 L80,270 L96,270 L97,175 Z" 
+        fill="url(#standingBodyGlow)" 
         stroke="#ffffff" 
         strokeWidth="1.5" 
-        filter="url(#whiteNeonGlow)"
-      />
-
-      {/* Arms & Gyan Mudra Hands resting on knees */}
-      <path 
-        d="M60,115 C45,135 45,165 58,185 C62,188 68,185 66,178 C56,160 58,138 68,122 Z" 
-        fill="#ffffff" 
-        opacity="0.9"
+        filter="url(#neonWhiteGlow)"
       />
       <path 
-        d="M140,115 C155,135 155,165 142,185 C138,188 132,185 134,178 C144,160 142,138 132,122 Z" 
-        fill="#ffffff" 
-        opacity="0.9"
+        d="M103,175 L104,270 L120,270 L122,175 Z" 
+        fill="url(#standingBodyGlow)" 
+        stroke="#ffffff" 
+        strokeWidth="1.5" 
+        filter="url(#neonWhiteGlow)"
       />
 
-      {/* Subtle Central Sushumna Energy Line */}
-      <line x1="100" y1="40" x2="100" y2="190" stroke="#ffffff" strokeWidth="1" strokeDasharray="4 4" opacity="0.6" />
-      
-      {/* Heart Center Sparkle (Anahata Chakra Node) */}
-      <circle cx="100" cy="115" r="3.5" fill="#ffffff" className="animate-ping" style={{ animationDuration: '3s' }} />
+      {/* Feet */}
+      <path d="M76,270 C76,278 94,278 96,270 Z" fill="#ffffff" filter="url(#neonWhiteGlow)" />
+      <path d="M104,270 C104,278 122,278 124,270 Z" fill="#ffffff" filter="url(#neonWhiteGlow)" />
+
+      {/* Central Sushumna Nadi Line */}
+      <line x1="100" y1="30" x2="100" y2="265" stroke="#ffffff" strokeWidth="1" strokeDasharray="4 4" opacity="0.7" />
+
+      {/* Heart Center Sparkle */}
+      <circle cx="100" cy="115" r="4" fill="#ffffff" className="animate-ping" style={{ animationDuration: '3s' }} />
       <circle cx="100" cy="115" r="2.5" fill="#ffffff" />
     </svg>
+  );
+};
+
+// Radiating Sunburst Starbeams Component
+const StarburstRays = ({ color = '#ec4899', opacity = 0.4 }: { color?: string; opacity?: number }) => {
+  return (
+    <div 
+      className="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-700 animate-spin-slow opacity-60"
+      style={{ animationDuration: '40s' }}
+    >
+      {[...Array(12)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2.5 h-[140%] origin-center rounded-full blur-[6px]"
+          style={{
+            transform: `rotate(${i * 30}deg)`,
+            background: `linear-gradient(to top, transparent 10%, ${color} 50%, transparent 90%)`,
+            opacity
+          }}
+        />
+      ))}
+    </div>
   );
 };
 
@@ -97,8 +129,9 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
   const activeDisplayLayer = previewLayer || auraState.currentHighestLayer;
   const isPreviewing = previewLayer !== null && previewLayer.layerNumber !== auraState.currentHighestLayer.layerNumber;
 
-  // Max unlocked layer number for visual rendering
-  const maxVisualLayer = isPreviewing ? previewLayer.layerNumber : auraState.unlockedLayersCount;
+  const visualUnlockedCount = isPreviewing ? previewLayer.layerNumber : auraState.unlockedLayersCount;
+
+  const containerHeightVh = Math.min(85, 50 + (visualUnlockedCount / 12) * 30);
 
   return (
     <div className="space-y-8 animate-fade-in pb-16">
@@ -125,7 +158,7 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
               {username ? `${username}'s Tejas Aura` : 'Dwadasa Tejas Aura'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mt-1 font-sans leading-relaxed">
-              As described in subtle body scriptures (*Yoga Upanishads & Tantras*), your spiritual aura expands through 12 concentric energy layers as your Sadhana recitations increase.
+              As described in subtle body scriptures (*Yoga Upanishads & Tantras*), your spiritual aura expands outwards contouring your body as your Sadhana recitations increase.
             </p>
           </div>
 
@@ -146,17 +179,20 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
         </div>
       </div>
 
-      {/* Main Feature: HUGE Meditative Figure & 12 Concentric Scriptural Aura Layers */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-12 border border-white/[0.06] bg-white/[0.003] flex flex-col items-center justify-center relative overflow-hidden min-h-[560px] sm:min-h-[640px]">
+      {/* Main Feature: Standing White Figure & Organic Expanding Body-Contour Aura (Full Mobile/App Coverage) */}
+      <div 
+        className="glass-panel rounded-3xl p-4 sm:p-12 border border-white/[0.06] bg-[#0c0d12] flex flex-col items-center justify-center relative overflow-hidden transition-all duration-700 w-full"
+        style={{ minHeight: `${containerHeightVh}vh` }}
+      >
         
         {/* Gender Silhouette Toggle */}
-        <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 p-1 rounded-xl bg-black/40 border border-white/10 backdrop-blur-md">
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-1.5 p-1 rounded-xl bg-black/50 border border-white/10 backdrop-blur-md">
           <button
             onClick={() => setGender('male')}
             type="button"
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
               gender === 'male' 
-                ? 'bg-white/15 text-white shadow border border-white/20' 
+                ? 'bg-white/20 text-white shadow border border-white/20' 
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -168,7 +204,7 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
             type="button"
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
               gender === 'female' 
-                ? 'bg-white/15 text-white shadow border border-white/20' 
+                ? 'bg-white/20 text-white shadow border border-white/20' 
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -177,67 +213,79 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
           </button>
         </div>
 
-        {/* Dynamic Glow Ambient Radial Background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div 
-            className="w-[500px] h-[500px] rounded-full blur-[110px] opacity-25 transition-all duration-1000 animate-pulse"
-            style={{ backgroundColor: activeDisplayLayer.colorHex }}
-          />
-        </div>
+        {/* Ambient Radial Gradient Fill behind full screen */}
+        <div 
+          className="absolute inset-0 pointer-events-none transition-all duration-1000 opacity-40 blur-[80px]"
+          style={{
+            background: `radial-gradient(ellipse at center, ${activeDisplayLayer.colorHex} 0%, rgba(139,92,246,0.2) 45%, transparent 80%)`
+          }}
+        />
 
-        {/* 12 Concentric Expanding Aura Layers Wrapper */}
-        <div className="relative z-10 flex items-center justify-center my-8 w-full max-w-lg aspect-square">
+        {/* Radiating Starburst Beams (As shown in Reference Image) */}
+        <StarburstRays color={activeDisplayLayer.colorHex} opacity={0.35} />
+
+        {/* Dynamic Expanding Aura Field Wrapper */}
+        <div className="relative z-10 flex items-center justify-center my-4 w-full h-full min-h-[380px] sm:min-h-[480px]">
           
-          {/* Render 12 Concentric Ring Layers around Person */}
+          {/* Smooth Organic Concentric Body-Contour Aura Bands */}
           {SCRIPTURAL_AURA_LAYERS.map((layer) => {
-            const isUnlocked = layer.layerNumber <= maxVisualLayer;
-            // Scale ring diameter progressively from 160px up to 480px
-            const sizePx = 140 + layer.layerNumber * 26;
+            const isUnlocked = layer.layerNumber <= visualUnlockedCount;
+            // Expand width and height based on layer number and total unlocked radius
+            const widthPx = (140 + layer.layerNumber * 24) * (isUnlocked ? 1 : 0.95);
+            const heightPx = (240 + layer.layerNumber * 26) * (isUnlocked ? 1 : 0.95);
             const zIndex = 20 - layer.layerNumber;
 
             return (
               <div
                 key={layer.layerNumber}
-                className={`absolute rounded-full transition-all duration-700 flex items-center justify-center ${
-                  isUnlocked ? 'animate-pulse' : 'border-dashed opacity-20'
+                className={`absolute rounded-[110px] transition-all duration-1000 flex items-center justify-center ${
+                  isUnlocked ? 'animate-pulse' : 'border-dashed opacity-15'
                 }`}
                 style={{
-                  width: `${sizePx}px`,
-                  height: `${sizePx}px`,
+                  width: `${widthPx}px`,
+                  height: `${heightPx}px`,
                   zIndex,
-                  borderColor: isUnlocked ? layer.colorHex : 'rgba(255,255,255,0.2)',
-                  borderWidth: isUnlocked ? '2px' : '1px',
-                  boxShadow: isUnlocked 
-                    ? `0 0 ${15 + layer.layerNumber * 3}px ${layer.glowColor}, inset 0 0 ${10 + layer.layerNumber * 2}px ${layer.colorHex}25` 
+                  backgroundColor: isUnlocked ? `${layer.colorHex}15` : 'transparent',
+                  borderColor: isUnlocked ? layer.colorHex : 'rgba(255,255,255,0.15)',
+                  borderWidth: isUnlocked ? '3px' : '1px',
+                  filter: isUnlocked 
+                    ? `blur(${Math.min(18, 4 + layer.layerNumber * 1.2)}px) drop-shadow(0 0 ${12 + layer.layerNumber * 2}px ${layer.colorHex})` 
                     : 'none',
-                  animationDuration: `${3 + (layer.layerNumber % 4)}s`
+                  boxShadow: isUnlocked 
+                    ? `0 0 ${20 + layer.layerNumber * 5}px ${layer.glowColor}, inset 0 0 ${15 + layer.layerNumber * 3}px ${layer.colorHex}30` 
+                    : 'none',
+                  animationDuration: `${3.5 + (layer.layerNumber % 4)}s`
                 }}
-              >
-                {/* Ring Layer Label Badge on Top Edge */}
-                {isUnlocked && (
-                  <div 
-                    className="absolute -top-3 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border shadow-lg whitespace-nowrap"
-                    style={{
-                      backgroundColor: 'rgba(15, 17, 23, 0.9)',
-                      borderColor: `${layer.colorHex}60`,
-                      color: layer.colorHex
-                    }}
-                  >
-                    L{layer.layerNumber}: {layer.name}
-                  </div>
-                )}
-              </div>
+              />
             );
           })}
 
-          {/* Central Meditative White Figure */}
-          <div className="relative z-20 flex flex-col items-center justify-center">
-            <MeditativePersonSvg gender={gender} />
-          </div>
+          {/* Crisp Overlay Contour Rings (Unblurred inner borders matching reference image) */}
+          {SCRIPTURAL_AURA_LAYERS.map((layer) => {
+            if (layer.layerNumber > visualUnlockedCount) return null;
+            const widthPx = 135 + layer.layerNumber * 24;
+            const heightPx = 235 + layer.layerNumber * 26;
+
+            return (
+              <div
+                key={`crisp_${layer.layerNumber}`}
+                className="absolute rounded-[110px] pointer-events-none transition-all duration-700 opacity-60 border"
+                style={{
+                  width: `${widthPx}px`,
+                  height: `${heightPx}px`,
+                  zIndex: 22 - layer.layerNumber,
+                  borderColor: layer.colorHex
+                }}
+              />
+            );
+          })}
+
+          {/* Central Standing Luminous White Silhouette */}
+          <StandingPersonSvg gender={gender} />
         </div>
 
-        {/* Current Active Layer Info Card */}
-        <div className="relative z-20 text-center max-w-lg mt-2 space-y-2 bg-black/40 p-4 sm:p-5 rounded-2xl border border-white/10 backdrop-blur-md">
+        {/* Active Layer Scriptural Info Card */}
+        <div className="relative z-20 text-center max-w-lg mt-4 space-y-2 bg-black/60 p-4 sm:p-5 rounded-2xl border border-white/10 backdrop-blur-md w-full">
           <div className="flex items-center justify-center gap-2">
             <span 
               className="w-3.5 h-3.5 rounded-full inline-block shadow-md"
@@ -314,7 +362,7 @@ export const AuraView: React.FC<AuraViewProps> = ({ logs, sadhanas, username }) 
               Dwadasa Abha • The 12 Scriptural Aura Layers
             </h3>
             <p className="text-xs text-slate-400 font-sans mt-0.5">
-              Click any layer to preview its visual energy field on the meditational figure above.
+              Click any layer to preview its visual energy field on the standing figure above.
             </p>
           </div>
           <span className="text-xs font-mono text-purple-300 bg-purple-500/10 px-3 py-1 rounded-lg border border-purple-500/20">
