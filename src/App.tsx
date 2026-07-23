@@ -7,15 +7,15 @@ import { SankalpManager } from './components/SankalpManager';
 import { PracticeStats } from './components/PracticeStats';
 import { AuraView } from './components/AuraView';
 import { calculateAuraState } from './auraUtils';
-import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp } from './types';
+import type { SadhanaStore, SadhanaDayLog, SadhanaConfig, Sankalp, SadhanaLogs } from './types';
 import { loadStore, saveStore, clearGuestStore, calculateDashboardStats, formatDateString, DEFAULT_SADHANA_LIST, getSankalpProgress, autoRestartSankalpsOnLog, autoEvaluateExpiredSankalps, purgeMockLogs } from './sadhanaUtils';
 import { Sparkles, Compass, CalendarDays, Settings, Award, Loader2, Cloud, LogOut, BarChart3, Zap } from 'lucide-react';
 
-// Firebase imports
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { saveUserStoreToFirestore, loadUserStoreFromFirestore, mergeStores, deleteUserStoreFromFirestore, subscribeToUserStore } from './firebaseUtils';
+import { DataControls } from './components/DataControls';
 import { AuthPage } from './components/AuthPage';
 
 type TabId = 'dashboard' | 'vows' | 'practices' | 'aura' | 'settings';
@@ -421,6 +421,41 @@ function App() {
 
 
 
+  const handleClearSampleData = async () => {
+    if (confirm('Clear sample test logs from your account database so your stats and Aura start 100% fresh with your real live sadhana entries?')) {
+      const cleanStore: SadhanaStore = {
+        ...store,
+        logs: {},
+        sankalps: [],
+        purgedMockLogs: true,
+        purgedMockV1: true
+      };
+      setStore(cleanStore);
+      if (currentUser) {
+        await saveUserStoreToFirestore(currentUser.uid, cleanStore);
+        saveStore(cleanStore, currentUser.uid);
+      } else {
+        saveStore(cleanStore, null);
+      }
+      alert('Sample test data successfully cleared! Your account is now clean and ready.');
+    }
+  };
+
+  const handleImportLogs = async (importedLogs: SadhanaLogs) => {
+    const updatedStore: SadhanaStore = {
+      ...store,
+      logs: importedLogs
+    };
+    setStore(updatedStore);
+    if (currentUser) {
+      await saveUserStoreToFirestore(currentUser.uid, updatedStore);
+      saveStore(updatedStore, currentUser.uid);
+    } else {
+      saveStore(updatedStore, null);
+    }
+    alert('Backup logs successfully imported!');
+  };
+
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
     setIsModalOpen(true);
@@ -786,7 +821,12 @@ function App() {
                 </div>
               </div>
 
-
+              {/* Data Backup & Sample Data Controls */}
+              <DataControls
+                logs={store.logs}
+                onImport={handleImportLogs}
+                onClearSampleData={handleClearSampleData}
+              />
 
             </div>
           </div>
